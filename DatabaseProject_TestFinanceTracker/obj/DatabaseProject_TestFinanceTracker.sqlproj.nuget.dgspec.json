@@ -1,0 +1,57 @@
+{
+  "format": 1,
+  "restore": {
+    "c:\\Users\\rashmi.gupta\\source\\repos\\Finance_Tracker 21-02-2024\\Finance_Tracker_SQL\\DatabaseProject_TestFinanceTracker\\DatabaseProject_TestFinanceTracker.sqlproj": {}
+  },
+  "projects": {
+    "c:\\Users\\rashmi.gupta\\source\\repos\\Finance_Tracker 21-02-2024\\Finance_Tracker_SQL\\DatabaseProject_TestFinanceTracker\\DatabaseProject_TestFinanceTracker.sqlproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "c:\\Users\\rashmi.gupta\\source\\repos\\Finance_Tracker 21-02-2024\\Finance_Tracker_SQL\\DatabaseProject_TestFinanceTracker\\DatabaseProject_TestFinanceTracker.sqlproj",
+        "projectName": "DatabaseProject_TestFinanceTracker",
+        "projectPath": "c:\\Users\\rashmi.gupta\\source\\repos\\Finance_Tracker 21-02-2024\\Finance_Tracker_SQL\\DatabaseProject_TestFinanceTracker\\DatabaseProject_TestFinanceTracker.sqlproj",
+        "packagesPath": "C:\\Users\\rashmi.gupta\\.nuget\\packages\\",
+        "outputPath": "c:\\Users\\rashmi.gupta\\source\\repos\\Finance_Tracker 21-02-2024\\Finance_Tracker_SQL\\DatabaseProject_TestFinanceTracker\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "C:\\Users\\rashmi.gupta\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net46"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net46": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU5128"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net46": {
+          "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.0, )"
+            }
+          }
+        }
+      }
+    }
+  }
+}

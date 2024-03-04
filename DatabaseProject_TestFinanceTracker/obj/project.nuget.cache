@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "ebVNCeITiX9qBErJQEOMLMsV13WeLKanHqLZQnbOJF1tUeb4vTwqGIN9Ijh307C8IKWzKwQe/3+e1bULyxQ8ng==",
+  "success": true,
+  "projectFilePath": "c:\\Users\\rashmi.gupta\\source\\repos\\Finance_Tracker 21-02-2024\\Finance_Tracker_SQL\\DatabaseProject_TestFinanceTracker\\DatabaseProject_TestFinanceTracker.sqlproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\rashmi.gupta\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.0\\microsoft.netframework.referenceassemblies.1.0.0.nupkg.sha512",
+    "C:\\Users\\rashmi.gupta\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net46\\1.0.0\\microsoft.netframework.referenceassemblies.net46.1.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
