@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Name>DatabaseProject_TestFinanceTracker</Name>
     <ProjectGuid>{E8BB0728-9F30-4A00-ADAD-DEED5E32DF96}</ProjectGuid>
-    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql160DatabaseSchemaProvider</DSP>
     <ModelCollation>1033, CI</ModelCollation>
   </PropertyGroup>
   <Target Name="BeforeBuild">

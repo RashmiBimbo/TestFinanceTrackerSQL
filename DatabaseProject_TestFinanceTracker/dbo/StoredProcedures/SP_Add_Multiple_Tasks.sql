@@ -1,10 +1,14 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 -- =============================================
 -- Author:		<Rashmi Gupta>
 -- Create date: <06-02-2024>
 -- Description:	<add multiple tasks for same user >
 -- =============================================
 -- Create the stored procedure in the specified schema
-CREATE PROCEDURE [dbo].[SP_Add_Multiple_Tasks]
+ALTER PROCEDURE [dbo].[SP_Add_Multiple_Tasks]
    @Collection VARCHAR(MAX)
 AS
 BEGIN
@@ -55,7 +59,8 @@ BEGIN
 		    AND [target].[Report_Id] = [source].[Report_Id]
 		    AND [target].[Month_From_Date]=[source].[Month_From_Date]
 		    AND [target].[Month_To_Date] = [source].[Month_To_Date]
-		    AND [target].[Month_Week_No] = [source].[Month_Week_No]				
+		    AND [target].[Month_Week_No] = [source].[Month_Week_No]	
+            AND ACTIVE = 1			
         WHEN NOT MATCHED THEN                 
 	        INSERT
 	        (
@@ -84,4 +89,3 @@ BEGIN
 END
 
 GO
-

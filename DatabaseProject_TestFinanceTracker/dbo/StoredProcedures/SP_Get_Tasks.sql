@@ -3,7 +3,7 @@
 -- Create date: <12-01-2024>
 -- Description:	<Get the added/submitted/approved tasks from sd_performance>
 -- =============================================
-CREATE PROCEDURE [dbo].[SP_Get_Tasks]
+ALTER PROCEDURE [dbo].[SP_Get_Tasks]
     @Start_Date DATE = NULL,
     @End_Date DATE = NULL,
     @User_Id VARCHAR(20) = null,
@@ -54,7 +54,7 @@ BEGIN
     END
 
     SELECT
-        Row_Number() Over (ORDER BY Submit_Date DESC) [Sno], *
+        Row_Number() Over (ORDER BY  Submit_Date, Add_Date DESC, Due_Date DESC, [User_Name], Category_Name, Report_Name, [Type]) [Sno], *
         FROM
         (
             SELECT
@@ -72,7 +72,14 @@ BEGIN
                         DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), RM.Due_Date)), 'dd-MMM-yyyy'
                      )
                     -- Every Weekday e.g. Every Thusrday
-                    ,'Every ' + LEFT(RM.Due_Date,1) + SUBSTRING(LOWER(RM.Due_Date), 2, LEN(RM.Due_Date) - 1)
+                    -- ,'Every ' + LEFT(RM.Due_Date,1) + SUBSTRING(LOWER(RM.Due_Date), 2, LEN(RM.Due_Date) - 1)
+                        -- Every Weekday e.g. Every Thusrday
+                    ,IIF
+                     (
+                         TRIM(ISNULL(RM.Due_Date,'')) = '', 
+                         '',
+                         'Every ' + LEFT(UPPER(TRIM(RM.Due_Date)), 1) + SUBSTRING(LOWER(TRIM(RM.Due_Date)), 2, LEN(TRIM(RM.Due_Date)) - 1)
+                     )
                 ) 
                 [Due_Date]
                 ,SP.Month_From_Date [From_Date]
@@ -80,7 +87,7 @@ BEGIN
                 ,SP.Month_Week_No [Week_No]            
                 ,FORMAT( SP.[Add_Date], 'dd-MMM-yyyy' ) [Add_Date]
                 ,FORMAT( SP.[Submit_Date], 'dd-MMM-yyyy' ) [Submit_Date]
-                ,IIF(Approve_Date IS NULL, 'No', 'Yes') Is_Approved
+                ,IIF( SP.[Submit_Date] IS NULL, IIF(ISNULL(TRIM(SP.Comments), '') = '', 'Pending Submission', 'Rejected'), IIF(Approve_Date IS NULL, 'Pending Approval', 'Approved')) [Status]
                 ,IIF(UPPER(RM.[Type])='W', 'Weekly', 'Monthly') [Type]
                 ,FORMAT( SP.[Approve_Date], 'dd-MMM-yyyy' ) [Approve_Date]
                 ,SP.[Location]
@@ -88,6 +95,7 @@ BEGIN
                     WHEN MONTH(Month_To_Date) BETWEEN @PreMnth AND @CrntMnth THEN 'Edit'
                     ELSE 'View'
                  END BtnText
+                ,sp.Comments 
                 ,SP.Rec_ID [Task_Id]
                 ,RM.Rec_ID [Report_Id]
                 ,UPPER(TRIM(LM.Location_Id)) Location_Id
@@ -128,7 +136,7 @@ BEGIN
                         )
                     )
         ) AS TBL
-        ORDER BY Submit_Date DESC, Add_Date DESC, Due_Date DESC, [User_Name], Category_Name, Report_Name, [Type];        
+        -- ORDER BY Submit_Date, Add_Date DESC, Due_Date DESC, [User_Name], Category_Name, Report_Name, [Type];        
                 -- ,IIF
                 -- (
                 --     ISNUMERIC(RM.Due_Date) = 1 
