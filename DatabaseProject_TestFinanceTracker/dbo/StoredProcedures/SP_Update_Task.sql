@@ -10,6 +10,7 @@ CREATE PROCEDURE [dbo].[SP_Update_Task]
     ,@Submit_From_Date DATE
     ,@Submit_To_Date DATE
     ,@Submit_Week_No INT
+    ,@Submit_Half_No INT
     ,@Location VARCHAR (MAX)
     ,@Created_By VARCHAR (20)
     ,@Rec_Id INT
@@ -19,8 +20,8 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-    SET @User_Id = UPPER(@User_Id);
-    SET @Created_By = UPPER(@Created_By);
+    SET @User_Id = UPPER(TRIM(@User_Id));
+    SET @Created_By = TRIM(@Created_By);
 
     BEGIN TRY    
     /*
@@ -53,10 +54,11 @@ BEGIN
                 ,[Month_From_Date]
                 ,[Month_To_Date]
                 ,[Month_Week_No]
+                ,[Year_Half_No]
                 ,[Location]
                 ,[Created_By]
             )
-            VALUES (@User_Id, @Report_Id, @ReportType, @Add_Date, @Submit_From_Date, @Submit_To_Date, @Submit_Week_No, @Location, @Created_By);
+            VALUES (@User_Id, @Report_Id, @ReportType, @Add_Date, @Submit_From_Date, @Submit_To_Date, @Submit_Week_No, @Submit_Half_No, @Location, @Created_By);
         END
         ELSE
             Select 'Please add the given task first!' [Message]

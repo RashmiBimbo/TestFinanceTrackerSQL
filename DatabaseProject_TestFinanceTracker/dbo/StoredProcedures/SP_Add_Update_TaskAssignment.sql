@@ -105,6 +105,40 @@ END;
             }
         ]'
     */
+    /* 
+        SP_Submit_Tasks
+        '[
+            {
+              "REC_ID": 94,
+              "SUBMIT_DATE": "2024-01-31",
+              "MODIFIED_BY": "Test",
+              "MODIFIED_DATE": "2024-01-31 11:03:24.874"
+            },
+            {
+            "REC_ID": 91,
+            "SUBMIT_DATE": "2024-01-31",
+            "MODIFIED_BY": "Test",
+            "MODIFIED_DATE": "2024-01-31 11:03:42.210"
+            }
+        ]'
+    */
+    /* 
+        SP_Submit_Tasks
+        '[
+            {
+              "REC_ID": 94,
+              "SUBMIT_DATE": "2024-01-31",
+              "MODIFIED_BY": "Test",
+              "MODIFIED_DATE": "2024-01-31 11:03:24.874"
+            },
+            {
+            "REC_ID": 91,
+            "SUBMIT_DATE": "2024-01-31",
+            "MODIFIED_BY": "Test",
+            "MODIFIED_DATE": "2024-01-31 11:03:42.210"
+            }
+        ]'
+    */
 
 GO
 

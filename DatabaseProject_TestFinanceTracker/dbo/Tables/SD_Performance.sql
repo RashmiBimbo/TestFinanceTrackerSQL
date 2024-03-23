@@ -36,12 +36,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'This table 
 GO
 
 
-ALTER TABLE [dbo].[SD_Performance]
-    ADD CONSTRAINT [DEFAULT_SD_Performance_Month_Week_No] DEFAULT ((0)) FOR [Month_Week_No];
-GO
-
-
-ALTER TABLE [dbo].[SD_Performance]
-    ADD CONSTRAINT [DEFAULT_SD_Performance_Year_Half_No] DEFAULT ((0)) FOR [Year_Half_No];
-GO
-

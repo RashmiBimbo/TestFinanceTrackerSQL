@@ -10,6 +10,7 @@ CREATE PROCEDURE [dbo].[SP_Add_Task]
     @Submit_From_Date DATE,
     @Submit_To_Date DATE,
     @Submit_Week_No INT,
+    @Submit_Half_No INT,
     @Location VARCHAR(MAX),
     @Created_By VARCHAR(20)
 AS
@@ -28,7 +29,7 @@ BEGIN
     /*
         SP_Add_Task 'Test', 95, '2024-01-30', '2024-01-01', '2024-01-31',1,  'C:\Users\rashmi.gupta\source\repos\Finance_Tracker\Finance_Tracker\Upload\Test_Weekly Cost review Week 1_30-Jan-2024.xls', 'Test'
     */
-        DECLARE @ReportType CHAR(10) = (SELECT RM.[Type]
+        DECLARE @ReportType VARCHAR(50) = (SELECT RM.[Type]
                                         FROM SD_Reports_Master RM
                                         WHERE RM.Rec_ID = @Report_Id);
 
@@ -41,7 +42,7 @@ BEGIN
                               AND [ACTIVE] = 1 
                               AND Month_From_Date = @Submit_From_Date 
                               AND Month_To_Date = @Submit_To_Date 
-                              AND ((UPPER(@ReportType) = 'MONTHLY') OR (UPPER(@ReportType) ='WEEKLY' AND Month_Week_No = @Submit_Week_No))
+                              AND ((UPPER(@ReportType) = 'MONTHLY') OR (UPPER(@ReportType) ='WEEKLY' AND Month_Week_No = @Submit_Week_No) OR(UPPER(@ReportType) ='HALF YEARLY' AND Year_Half_No = @Submit_Half_No))
                            );
         IF (@RecIdExist != 0) --TASK EXISTS
         BEGIN
@@ -58,11 +59,12 @@ BEGIN
                     ,[Month_From_Date]
                     ,[Month_To_Date]
                     ,[Month_Week_No]
+                    ,[Year_Half_No]
                     ,[Location]
                     ,[Created_By]
                     )
                 VALUES
-                    (@User_Id, @Report_Id, @ReportType, @Add_Date, @Submit_From_Date, @Submit_To_Date, @Submit_Week_No, @Location, @Created_By);
+                    (@User_Id, @Report_Id, @ReportType, @Add_Date, @Submit_From_Date, @Submit_To_Date, @Submit_Week_No, @Submit_Half_No, @Location, @Created_By);
             END
     
         COMMIT;
