@@ -3,89 +3,127 @@
 -- Create date: <25-02-2024>
 -- Description: <Select tasks for a particular user which are not added>
 -- =============================================
-ALTER PROCEDURE [dbo].[SP_Get_Unassigned_Tasks]
+CREATE PROCEDURE [dbo].[SP_Get_Unassigned_Tasks]
      @Approver_Id VARCHAR(50) = NULL
    , @User_Id VARCHAR(50) = NULL
    , @Report_Id INT = 0
    , @Category_Id INT = 0
    , @Category_Type_Id INT = 0
    , @LocationId VARCHAR(20) = NULL
+   , @RoleId INT = 0
 AS
 BEGIN
     /*
-        SP_Get_Unassigned_Tasks '', '2024-01-01', '2024-01-31', 0,'W'
+        SP_Get_Unassigned_Tasks 'CORPORATE1', '', 0, 0, 0, 'corp'
         SP_Get_Unassigned_Tasks 'ashish', 'BLR', 168
-        SP_Get_Unassigned_Tasks '', 'ANKIT', 00, 17, 16
+        SP_Get_Unassigned_Tasks 'ashish', '', 0, 0, 0, NULL, 0
+        SP_Get_Unassigned_Tasks 'ABHA', 'ANKIT', 00, 17, 16
         SP_Get_Unassigned_Tasks '', null, 0, 0, 0, 'KOC'
     */
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+    BEGIN TRY
+        SET @Approver_Id = UPPER(TRIM(@Approver_Id));
+        SET @User_Id     = UPPER(TRIM(@User_Id));
+        SET @LocationId  = UPPER(TRIM(@LocationId));
 
-    SET @Approver_Id = UPPER(TRIM(@Approver_Id));
-    SET @User_Id     = UPPER(TRIM(@User_Id));
-    SET @LocationId  = UPPER(TRIM(@LocationId));
+        DECLARE @IsApprAdmin BIT, @IsAdmin BIT, @IsApprover BIT; 
 
-    DECLARE @IsApprAdmin BIT = IIF(@Approver_Id IS NOT NULL AND @LocationId IS NOT NULL, 1, 0)
-    DECLARE @IsAdmin     BIT = IIF(@Approver_Id IS NULL     AND @LocationId IS NOT NULL, 1, 0)
-    DECLARE @IsApprover  BIT = IIF(@Approver_Id IS NOT NULL AND @LocationId IS     NULL, 1, 0)
+        -- Decide whether the given user is admin or approver or both
+        
+        IF EXISTS(SELECT * FROM SD_Login_Master WHERE UPPER(TRIM(Location_Id)) = @LocationId AND Active = 1 AND (ISNULL(@Approver_Id,'') = '' OR UPPER(TRIM(User_Id)) = @Approver_Id AND Role_Id = 1 ))
+        BEGIN    
+            IF EXISTS( SELECT * FROM SD_UserTaskAssignment WHERE UPPER(TRIM(Approver)) = @Approver_Id AND Active = 1)
+            BEGIN
+               SET @IsApprAdmin = 1;
+            --    SELECT 'ApprAdmin';
+            END
+        ELSE
+        BEGIN
+           SET @IsAdmin = 1;
+        --    SELECT 'Admin';
+        END
+        END
+        ELSE 
+            IF EXISTS( SELECT * FROM SD_UserTaskAssignment WHERE UPPER(TRIM(Approver)) = @Approver_Id AND Active = 1)
+            BEGIN
+               SET @IsApprover = 1;
+            --    SELECT 'Appr';
+            END
+            ELSE
+            BEGIN
+                Select 'Please enter either a valid location or a user which is either admin or approver or both!' Error;
+                RETURN;
+            END        
 
-    BEGIN TRY       
-       WITH
+        IF OBJECT_ID('TEMPDB..#TBL') IS NOT NULL
+        BEGIN
+            DROP TABLE #TBL;
+        END 
+
+        --SELECT THE USER+REPORT COMBO WHICH IS ACTIVE AND HAS APPROVER. LATER WE WILL EXCLUDE THESE RECORDS FROM SUPERSET OF USER+REPORT COMBO. THUS WE GET THE USER+REPORT COMBO WHICH DOES NOT HAVE ANY APPROVER OR INACTIVE OR DOES NOT EXIST IN USERTASKASSIGNMENT.
+        SELECT * INTO #TBL FROM
+        (
+            SELECT ROW_NUMBER() OVER (PARTITION BY UserID, REPORTID ORDER BY [Approver]) [Repeat], * FROM SD_UserTaskAssignment  UTA
+            WHERE (UTA.Active = 1 and ISNULL(TRIM(UTA.Approver),'') != '')
+        ) TBL
+        WHERE [repeat] = 1;
+
+        -- SELECT * FROM #TBL;
+
+        WITH
         Users
         AS
         (
-            --Get Approver with subordinates
+            -- Get unique subordinates of given location/approver. 
+            -- For given @LocationId subordinates are selected from login_master,  
+            -- if @LocationId is not given but @approverId is, subordinates whose approver is @approverId are selected from usertaskassignment. 
+            -- If both are given, subordinates whose approver is @approverId are selected from usertaskassignment + subordinates whose location is @LocationId are selected from login_master   
             SELECT
             ROW_NUMBER() OVER (PARTITION BY UserID ORDER BY [User_Name]) [Repeat], *
             FROM 
             (
-                SELECT DISTINCT LM.User_Id UserId
+                SELECT DISTINCT 
+                LM.User_Id UserId
                 ,UTA.Approver Approver
                 ,LM.[User_Name] User_Name
                 ,LocM.Loc_Id
-                ,UTA.ReportId ReportId
+                ,UTA.ReportId
                 ,UTA.RecId U_Id
+                ,LM.Role_Id
                 FROM
                     SD_Login_Master LM
-                    LEFT JOIN
-                    SD_UserTaskAssignment UTA ON UPPER(TRIM(LM.User_Id)) = UPPER(TRIM(UTA.UserId)) AND UTA.Active = 1
                     INNER JOIN
                     SD_Location_Master LocM ON UPPER(TRIM(LM.Location_Id)) = UPPER(TRIM(LocM.Loc_Id))
+                    LEFT JOIN
+                    SD_UserTaskAssignment UTA ON UPPER(TRIM(LM.User_Id)) = UPPER(TRIM(UTA.UserId)) AND UTA.Active = 1
                 WHERE
-                    ISNULL(UPPER(TRIM(LM.User_Id)),'') = IIF(ISNULL(@User_Id,'')='', ISNULL(UPPER(TRIM(LM.User_Id)),''), @User_Id)
-                    AND
                     LM.Active = 1
                     AND
                     LocM.Active = 1
-                    -- AND
-                    -- (
-                    --     (@IsApprAdmin = 1 AND ((UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId) OR UPPER(TRIM(UTA.Approver)) = @Approver_Id))
-                    --     OR 
-                    --     (@IsAdmin = 1 AND (UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId))
-                    --     OR
-                    --     (@IsApprover = 1 AND UPPER(TRIM(UTA.Approver)) = @Approver_Id)
-                    -- )
-                    --If @ISAPAD UTA.APPROVER IS NULL OR = @APP ELSE IF @ISAD UTA.APP IS NULL ELSE IF @ISAP UTA.APP= @ISAP 
-                    -- ISNULL(UPPER(TRIM(UTA.Approver)),'') = IIF(ISNULL(@Approver_Id,'') = '', ISNULL(UPPER(TRIM(UTA.Approver)),''), @Approver_Id)
-                    -- ISNULL(UPPER(TRIM(UTA.Approver)),'') = ISNULL(@Approver_Id,'')
-                    -- AND --EITHER THE APPROVER SHOULD BE THE APPROVER IN UTA OR IF @Approver_Id IS NULL I.E. IT IS ADMIN, THEN IT CAN ADD USERS WHICH ARE NOT IN  UTA 
-                    -- (@Approver_Id IS NULL OR (@Approver_Id IS NOT NULL AND UTA.RecId IS NOT NULL))
-                    -- OR
-                    -- UPPER(TRIM(LocM.Loc_Id)) = IIF(ISNULL(@LocationId,'') = '', UPPER(TRIM(LocM.Loc_Id)), @LocationId)
-                    -- AND
-                    -- END CASE
-                    -- IIF(@IsApprAdmin = 1, ((UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId) OR UPPER(TRIM(UTA.Approver)) = @Approver_Id),
-                    --     IIF(@IsAdmin = 1, (UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId),
-                    --         IIF(@IsApprover = 1, UPPER(TRIM(UTA.Approver)) = @Approver_Id, 0)
-                    --         )
-                    --     ) = 1 -- Adjust the conditions as per your requirements
-                ) TBL
-        )
+                    AND
+                    UPPER(TRIM(LM.User_Id)) = IIF(ISNULL(@User_Id,'')='', UPPER(TRIM(LM.User_Id)), @User_Id)
+                    AND
+                    (
+                        (@IsApprAdmin = 1 AND ((UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId) OR UPPER(TRIM(UTA.Approver)) = @Approver_Id))
+                        OR 
+                        (@IsAdmin = 1 AND (UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId))
+                        OR
+                        (@IsApprover = 1 AND UPPER(TRIM(UTA.Approver)) = @Approver_Id)
+                    )
+                    AND
+                    LM.Role_Id = IIF(@RoleId = 0, LM.Role_Id, @RoleId)
+
+            ) TBL
+        ) 
+        --get only unique subordinate
+        -- SELECT * FROM Users U 
+        -- WHERE U.Repeat = 1
         ,UsrRpt
         AS
         (
-            --Get subordinate along with each report
+            --Get subordinates along with each report and create a superset/cartesian product of subordinates*reports
             SELECT DISTINCT
                 ROW_NUMBER() OVER (PARTITION BY U.UserID, RM.Report_Name ORDER BY U.[User_Name]) [Repeat1],
                 RM.Report_Name,
@@ -97,6 +135,7 @@ BEGIN
                 RM.Rec_ID REPORT_ID,
                 CM.Rec_Id Category_Id,
                 CTM.Rec_Id Category_Type_Id
+               ,U.Role_Id 
             FROM Users U
             CROSS JOIN 
             SD_Reports_Master RM
@@ -117,39 +156,44 @@ BEGIN
                 AND
                 CTM.Active = 1
         )
-    -- SELECT * FROM UsrRpt
+        -- SELECT * FROM UsrRpt
 
-    --Get unique subordinates + report combo whose approver is not already their in SD_UserTaskAssignment. Thus we get the unassigned tasks for each subordinate.
-    SELECT
-        ROW_NUMBER() OVER (ORDER BY U.User_Name, U.Report_Name) Sno,
-        U.Repeat1,
-        U.User_Name,
-        U.UserId,
-        U.Report_Name Task_Name,
-        U.Approver UApprover,
-        UTA.Approver UTAApprover,
-        U.REPORT_ID ReportId,
-        U.Category_Id,
-        U.Category_Type_Id,
-        U.[Loc_Id]
-    FROM
-        UsrRpt U
-        LEFT JOIN [dbo].[SD_UserTaskAssignment] UTA
-        ON 
-            UPPER(TRIM(U.UserId)) = UPPER(TRIM(UTA.UserId))
-            AND
-            U.REPORT_ID = UTA.ReportId
-            AND
-            UTA.Active = 1
-    WHERE 
-        ISNULL(UPPER(TRIM(UTA.Approver)),'') = ''
-        -- AND  
-        -- UTA.RecId IS NULL
+        --Get unique subordinates +REPORT COMBO WHICH IS NOT ACTIVE OR DOES NOT HAVE APPROVER OR DOES NOT EXIST IN UTA. Thus we get the combo WHICH IS EITHER NOT ACTIVE OR DOES NOT HAVE APPROVER OR NOT PRESENT IN USERTASKASSIGNMENT .
+        SELECT 
+        ROW_NUMBER() OVER (ORDER BY User_Name, Task_Name) Sno, * 
+        FROM 
+        (
+            SELECT 
+            ROW_NUMBER() OVER (PARTITION BY U.UserID, U.REPORT_ID ORDER BY UTA.[Approver]) [Repeat],
+            UTA.RecId UTRecId,
+            U.User_Name User_Name ,
+            U.UserId UserId,
+            U.Report_Name Task_Name,
+            UTA.ReportName UTReport_Name,
+            U.Approver UApprover,
+            UTA.Approver Approver,
+            U.REPORT_ID ReportId,
+            UTA.REPORTID UTReportId,
+            U.Category_Id,
+            U.Category_Type_Id,
+            U.[Loc_Id],
+            U.Repeat1
+            ,U.Role_Id
+            FROM
+            UsrRpt U
+            LEFT JOIN #TBL UTA
+            ON 
+                UPPER(TRIM(U.UserId)) = UPPER(TRIM(UTA.UserId))
+                AND
+                U.REPORT_ID = UTA.ReportId
+            WHERE 
+                UTA.RecId IS NULL
+        ) SQ
+        WHERE SQ.Repeat = 1;
     END TRY
     BEGIN CATCH
-        SELECT ERROR_MESSAGE();
+        SELECT ERROR_MESSAGE() Error;
     END CATCH;
 END;
-
 GO
 

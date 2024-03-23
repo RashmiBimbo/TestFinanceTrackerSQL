@@ -3,7 +3,7 @@
 -- Create date: <05-01-2024>
 -- Description:	<Get the Category Type from SD_Category_Type_Master>
 -- =============================================
-ALTER PROCEDURE [dbo].[SP_Create_CategoryType]
+CREATE PROCEDURE [dbo].[SP_Create_CategoryType]
     @Name VARCHAR(50),
     @Created_By VARCHAR(20)
 AS
@@ -43,6 +43,5 @@ BEGIN
         SELECT ERROR_MESSAGE() Error;
     END CATCH;
 END;
-
 GO
 

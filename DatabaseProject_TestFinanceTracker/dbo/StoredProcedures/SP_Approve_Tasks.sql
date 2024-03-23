@@ -17,6 +17,7 @@ BEGIN
     (
         Rec_ID INT
        ,Approve_Date DATE
+       ,Comments VARCHAR(1000)
        ,Modified_By VARCHAR(50)
        ,Modified_Date DATETIME
     );
@@ -24,7 +25,7 @@ BEGIN
     BEGIN TRY
         INSERT INTO @tbl
         (
-            Rec_ID, Approve_Date, Modified_By, Modified_Date
+            Rec_ID, Approve_Date, Comments , Modified_By, Modified_Date
         )
         SELECT *
         FROM
@@ -33,6 +34,7 @@ BEGIN
             (
                  Rec_ID int              '$.REC_ID'
                 ,Approve_Date DATE       '$.APPROVE_DATE'
+                ,Comments VARCHAR(1000)  '$.COMMENTS'
                 ,Modified_By VARCHAR(50) '$.MODIFIED_BY'
                 ,Modified_Date DATETIME  '$.MODIFIED_DATE'
             );   
@@ -44,6 +46,7 @@ BEGIN
         ON [target].REC_ID = [source].REC_ID
         WHEN MATCHED THEN --if the row already exists, update it            
             UPDATE SET [target].Approve_Date = source.APPROVE_DATE,
+                       [target].[Comments] = source.[Comments],
                        [target].MODIFIED_BY = UPPER([source].[MODIFIED_BY]),
                        [target].MODIFIED_DATE = IIF(ISNULL([source].[MODIFIED_DATE],'') = '', GETDATE(), [source].[MODIFIED_DATE])
             --OUTPUT $[action], inserted.*, deleted.*

@@ -41,7 +41,7 @@ BEGIN
                               AND [ACTIVE] = 1 
                               AND Month_From_Date = @Submit_From_Date 
                               AND Month_To_Date = @Submit_To_Date 
-                              AND ((UPPER(@ReportType) = 'M') OR (UPPER(@ReportType) ='W' AND Month_Week_No = @Submit_Week_No))
+                              AND ((UPPER(@ReportType) = 'MONTHLY') OR (UPPER(@ReportType) ='WEEKLY' AND Month_Week_No = @Submit_Week_No))
                            );
         IF (@RecIdExist != 0) --TASK EXISTS
         BEGIN
@@ -72,6 +72,5 @@ BEGIN
         SELECT ERROR_MESSAGE();
     END CATCH;
 END
-
 GO
 

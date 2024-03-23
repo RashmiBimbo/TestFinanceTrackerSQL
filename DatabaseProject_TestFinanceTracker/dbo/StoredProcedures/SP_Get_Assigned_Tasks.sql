@@ -10,19 +10,20 @@ CREATE PROCEDURE [dbo].[SP_Get_Assigned_Tasks]
    ,@Category_Id int = 0
    ,@Category_Type_Id int = 0
    ,@LocationId VARCHAR(20) = NULL
+   ,@RoleId INT = 0
 AS
 BEGIN
     /*
-        SP_Get_Assigned_Tasks '', '2024-01-01', '2024-01-31', 0,'W'
-        SP_Get_Assigned_Tasks 'ashish', '2024-02-01', '2024-02-29', 0,'W'
+        SP_Get_Assigned_Tasks '', '2024-01-01', '2024-01-31', 0,'WEEKLY'
+        SP_Get_Assigned_Tasks 'ashish', '2024-02-01', '2024-02-29', 0,'WEEKLY'
     */
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
     SET @Approver_Id = ISNULL(UPPER(TRIM(@Approver_Id)), '');
-    SET @User_Id =     UPPER(TRIM(@User_Id));
-    SET @LocationId =     UPPER(TRIM(@LocationId));
+    SET @User_Id     = UPPER(TRIM(@User_Id));
+    SET @LocationId  = UPPER(TRIM(@LocationId));
 
     BEGIN TRY    
         SELECT 
@@ -36,6 +37,7 @@ BEGIN
                     ,UTA.Approver
                     ,UTA.RecId
                     ,LocM.Loc_Id
+                    ,LM.Role_Id
                     FROM 
                         [dbo].[SD_UserTaskAssignment] UTA
                     INNER JOIN 
@@ -62,6 +64,8 @@ BEGIN
                     AND
                     UPPER(TRIM(LocM.Loc_Id)) = IIF(ISNULL(@LocationId,'') = '', UPPER(TRIM(LocM.Loc_Id)), @LocationId)
                     AND
+                    LM.Role_Id = IIF(@RoleId = 0, LM.Role_Id, @RoleId)
+                    AND
                     UTA.Active = 1
                     AND 
                     LM.Active = 1
@@ -81,6 +85,5 @@ BEGIN
         SELECT ERROR_MESSAGE();
     END CATCH;
 END;
-
 GO
 

@@ -12,7 +12,7 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-	SELECT Role_Id, TRIM(Role_Name) FROM [TestFinanceTracker].[DBO].[SD_Role_Master] WHERE Active = 1
+	SELECT Role_Id, Role_Name FROM [DBO].[SD_Role_Master] WHERE Active = 1
     ORDER BY Role_Name, Role_Id
 
 END

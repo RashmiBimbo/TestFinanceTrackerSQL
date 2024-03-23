@@ -11,40 +11,32 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
 
-    -- Insert statements for procedure here
-
     DECLARE @tbl TABLE
     (
-         [UserId]        VARCHAR (50) 
-        ,[ReportId]      INT          
-        ,[ReportName]    VARCHAR (150)
-        ,[Created_Date]  DATETIME     
-        ,[Created_By]    VARCHAR (20) 
-        ,[Approver]      VARCHAR (50) 
-        ,[Active]        BIT
+         [UserId]       VARCHAR (50) 
+        ,[ReportId]     INT          
+        ,[ReportName]   VARCHAR (150)
+        ,[Created_Date] DATETIME     
+        ,[Created_By]   VARCHAR (20) 
+        ,[Approver]     VARCHAR (50) 
+        ,[Active]       BIT
     );
 
     BEGIN TRY
         INSERT INTO @tbl
         (
-             [UserId]      
-            ,[ReportId]    
-            ,[ReportName]  
-            ,[Created_By]  
-            ,[Approver]
-            ,[Active]    
+            [UserId], [ReportId], [ReportName], [Created_By], [Approver], [Active]    
         )
-        SELECT UPPER(TRIM([UserId])), [ReportId], [ReportName], UPPER(TRIM([Created_By])), [Approver], CAST([Active] AS BIT)      
-        FROM
-        OPENJSON(@Collection)
+        SELECT UPPER(TRIM([UserId])), [ReportId], [ReportName], UPPER(TRIM([Created_By])), UPPER(TRIM([Approver])), CAST([Active] AS BIT)      
+        FROM OPENJSON(@Collection)
         WITH
         (
-             [UserId]        VARCHAR (50)  '$.USER_ID'
-            ,[ReportId]      INT           '$.REPORT_ID'
-            ,[ReportName]    VARCHAR (150) '$.REPORT_NAME'
-            ,[Created_By]    VARCHAR (20)  '$.CREATED_BY'
-            ,[Approver]      VARCHAR (50)  '$.APPROVER'
-            ,[Active]        BIT           '$.ACTIVE'
+             [UserId]     VARCHAR (50)  '$.USER_ID'
+            ,[ReportId]   INT           '$.REPORT_ID'
+            ,[ReportName] VARCHAR (150) '$.REPORT_NAME'
+            ,[Created_By] VARCHAR (20)  '$.CREATED_BY'
+            ,[Approver]   VARCHAR (50)  '$.APPROVER'
+            ,[Active]     BIT           '$.ACTIVE'
         );   
 
         BEGIN TRANSACTION;
@@ -60,8 +52,8 @@ BEGIN
             SET 
                 [target].[Active]        = [source].[ACTIVE],
                 [target].[ReportName]    = [source].[ReportName],
-                [target].[Approver]      = [source].[Approver],
-                [target].[MODIFIED_BY]   = [source].[Created_By],
+                [target].[Approver]      = UPPER(TRIM([source].[Approver])),
+                [target].[MODIFIED_BY]   = UPPER(TRIM([source].[Created_By])),
                 [target].[MODIFIED_DATE] = GETDATE()
         WHEN NOT MATCHED THEN --if the row not exists, add it            
             INSERT
@@ -79,6 +71,23 @@ BEGIN
         SELECT ERROR_MESSAGE();
     END CATCH
 END;
+    /* 
+        SP_Submit_Tasks
+        '[
+            {
+              "REC_ID": 94,
+              "SUBMIT_DATE": "2024-01-31",
+              "MODIFIED_BY": "Test",
+              "MODIFIED_DATE": "2024-01-31 11:03:24.874"
+            },
+            {
+            "REC_ID": 91,
+            "SUBMIT_DATE": "2024-01-31",
+            "MODIFIED_BY": "Test",
+            "MODIFIED_DATE": "2024-01-31 11:03:42.210"
+            }
+        ]'
+    */
     /* 
         SP_Submit_Tasks
         '[

@@ -7,7 +7,7 @@
 CREATE PROCEDURE [dbo].[SP_Get_Submit_Tasks_SubOrdinates]
 	@From_Date DATE = NULL
    ,@To_Date DATE = NULL
-   ,@Type char(10) = NULL
+   ,@Type char(50) = NULL
    ,@Approver_Id varchar(20) = NULL
    ,@IsApproved bit = 0
    ,@User_Id varchar(20) = NULL
@@ -18,11 +18,11 @@ AS
 BEGIN
 
 /*
-    SP_Get_Submit_Tasks_SubOrdinates '2023-12-01', '2024-01-31', 'M', 'ASHISH', 1'BLR',99
+    SP_Get_Submit_Tasks_SubOrdinates '2023-12-01', '2024-01-31', 'MONTHLY', 'ASHISH', 1'BLR',99
     SP_Get_Submit_Tasks_SubOrdinates NULL, NULL, '', 'ASHISH', 1'BLR',99
     SP_Get_Submit_Tasks_SubOrdinates NULL, NULL, '', '', 0, '', 0, 0, 'che'
     SP_Get_Submit_Tasks_SubOrdinates NULL, NULL, '', '', 1 
-    SP_Get_Submit_Tasks_SubOrdinates NULL, NULL, '', '', 1, '', 0, 3, 'che'
+    SP_Get_Submit_Tasks_SubOrdinates NULL, NULL, '', 'Half Yearly', 1, '', 0, 3, 'che'
 */
 	SET @Approver_Id = UPPER(TRIM(@Approver_Id)); 
 	SET @User_Id = UPPER(TRIM(@User_Id)); 
@@ -35,19 +35,28 @@ BEGIN
     (
         SELECT 
          LM.[User_Name], CTM.Category_Type_Name, CM.Category_Name, RM.Report_Name, P.[Location], P.Rec_ID Task_Id, RM.Due_Date [Due_Date_Orgnl], U.[UserId]
-        , P.Month_From_Date, P.Month_To_Date, U.Approver, U.ReportId , RM.[Type] Type_Orgnl, P.Approve_Date Appr_Date_Orgnl, LM.Role_Id, LM.Location_Id
-        , IIF(RM.TYPE = 'M', 'Monthly', 'Weekly') [Type]
-        , IIF
-          (
-              ISNUMERIC(Due_Date) = 1 
-              ,FORMAT
-               ( 
-                  DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(P.Month_To_Date), MONTH(P.Month_To_Date), RM.Due_Date)),
-                  'dd-MMM-yyyy'
-               )        
-              ,'Every ' + LEFT(RM.Due_Date, 1) + SUBSTRING(LOWER(RM.Due_Date), 2, LEN(RM.Due_Date) - 1)
-          ) 
-          [Due_Date]
+        ,P.Month_From_Date, P.Month_To_Date, U.Approver, U.ReportId , RM.[Type] Type_Orgnl, P.Approve_Date Appr_Date_Orgnl, LM.Role_Id, LM.Location_Id
+        ,RM.[Type] [Type]
+        ,IIF
+        (
+            ISNUMERIC(Due_Date) = 1 
+            ,CASE
+                WHEN RM.Due_Date = '41' THEN '01-Jan-'+ CAST(YEAR(GETDATE()) AS VARCHAR(4))  --Report for First Half
+                WHEN RM.Due_Date = '42' THEN '01-Jul-'+ CAST(YEAR(GETDATE()) AS VARCHAR(4))  --Report for 2nd Half
+                ELSE 
+                FORMAT
+                (   -- dd-MMM-yyyy format e.g. 10-Jan-2024
+                   DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(P.Month_To_Date), MONTH(P.Month_To_Date), RM.Due_Date)), 'dd-MMM-yyyy'
+                )
+            END 
+            ,IIF
+            (
+                TRIM(ISNULL(RM.Due_Date,'')) = '', 
+                '',
+                'Every ' + LEFT(UPPER(TRIM(RM.Due_Date)), 1) + SUBSTRING(LOWER(TRIM(RM.Due_Date)), 2, LEN(TRIM(RM.Due_Date)) - 1)
+            )
+        ) 
+        [Due_Date]
         , FORMAT(P.Submit_Date, 'dd-MMM-yyyy') Submit_Date
         , FORMAT(P.Approve_Date, 'dd-MMM-yyyy') Approve_Date
 	    FROM SD_UserTaskAssignment U 
@@ -95,6 +104,5 @@ BEGIN
         ) TBL
         ORDER BY Due_Date, [User_Name], Report_Name, Submit_Date DESC
 END
-
 GO
 

@@ -2,14 +2,17 @@ CREATE TABLE [dbo].[SD_Performance] (
     [Rec_ID]          BIGINT                                      IDENTITY (1, 1) NOT NULL,
     [User_Id]         VARCHAR (50)                                NOT NULL,
     [Report_Id]       INT                                         NOT NULL,
-    [Report_Type]     CHAR (10)                                   NULL,
+    [Report_Type]     VARCHAR (50)                                NULL,
     [Add_Date]        DATE                                        CONSTRAINT [DEFAULT_SD_Performance_Submit_Date] DEFAULT (getdate()) NOT NULL,
     [Month_From_Date] DATE                                        NULL,
     [Month_To_Date]   DATE                                        NULL,
-    [Month_Week_No]   INT                                         NULL,
+    [Month_Week_No]   INT                                         CONSTRAINT [DEFAULT_SD_Performance_Month_Week_No] DEFAULT ((0)) NULL,
+    [Year_Half_No]    INT                                         CONSTRAINT [DEFAULT_SD_Performance_Year_Half_No] DEFAULT ((0)) NULL,
     [Location]        NVARCHAR (MAX)                              NULL,
     [Submit_Date]     DATE                                        NULL,
     [Approve_Date]    DATE                                        NULL,
+    [Comments]        VARCHAR (1000)                              NULL,
+    [Status]          TINYINT                                     NULL,
     [Active]          BIT                                         CONSTRAINT [DEFAULT_SD_Performance_Active] DEFAULT ((1)) NOT NULL,
     [Created_Date]    DATETIME                                    CONSTRAINT [DEFAULT_SD_Performance_Created_Date] DEFAULT (getdate()) NOT NULL,
     [Created_By]      VARCHAR (20)                                NOT NULL,
@@ -30,5 +33,15 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'This table will have the data of the reports submitted by the plants, corporate and other users.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SD_Performance';
 
 
+GO
+
+
+ALTER TABLE [dbo].[SD_Performance]
+    ADD CONSTRAINT [DEFAULT_SD_Performance_Month_Week_No] DEFAULT ((0)) FOR [Month_Week_No];
+GO
+
+
+ALTER TABLE [dbo].[SD_Performance]
+    ADD CONSTRAINT [DEFAULT_SD_Performance_Year_Half_No] DEFAULT ((0)) FOR [Year_Half_No];
 GO
 

@@ -3,7 +3,7 @@
 -- Create date: <09-01-2024>
 -- Description:	<Get the Report details from SD_Report_Master>
 -- =============================================
-CREATE PROCEDURE [dbo].[SP_Get_Reports]
+ALTER PROCEDURE [dbo].[SP_Report_Get]
   @Category_Id int = 0
  ,@Category_Type_Id int = 0
  ,@Report_Id int = 0

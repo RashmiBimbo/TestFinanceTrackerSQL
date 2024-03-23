@@ -9,7 +9,6 @@ FROM dbo.SD_Login_Master AS LogM
      LEFT JOIN 
      dbo.SD_UserTaskAssignment UTA ON UTA.UserId = LogM.User_Id
 WHERE (RolM.Active = 1) AND (LocM.Active = 1) AND (LogM.Active = 1) AND (UTA.UserId IS NULL OR UTA.Active = 1)
-
 GO
 
 EXECUTE sp_addextendedproperty @name = N'MS_DiagramPane1', @value = N'[0E232FF0-B466-11cf-A24F-00AA00A3EFFF, 1.00]
@@ -140,12 +139,8 @@ Begin DesignProperties =
    End
 End
 ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'VIEW', @level1name = N'V_UserDetails';
-
-
 GO
 
 EXECUTE sp_addextendedproperty @name = N'MS_DiagramPaneCount', @value = 1, @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'VIEW', @level1name = N'V_UserDetails';
-
-
 GO
 

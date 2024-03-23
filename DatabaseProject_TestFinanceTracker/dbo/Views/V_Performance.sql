@@ -7,7 +7,7 @@ AS
         SP.[Add_Date],
         RM.[Priority],
         RM.[Weight],
-        IIF(RM.[Type] = 'W', 'Weekly', IIF(RM.[Type] = 'M', 'Monthly', RM.[Type])) AS Report_Type,
+        rm.[Type] Report_Type,
         RM.Due_Date,
         RM.[Report_Name] AS [Report_Name],
         FORMAT(EOMONTH(GETDATE(), -1), 'MMM, yyyy') [Month],
@@ -25,7 +25,9 @@ AS
         AND (RM.Active = 1)
         AND (SP.Active = 1)
         AND (LM.Active = 1)
+GO
 
+EXECUTE sp_addextendedproperty @name = N'MS_DiagramPaneCount', @value = 1, @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'VIEW', @level1name = N'V_Performance';
 GO
 
 EXECUTE sp_addextendedproperty @name = N'MS_DiagramPane1', @value = N'[0E232FF0-B466-11cf-A24F-00AA00A3EFFF, 1.00]
@@ -166,12 +168,5 @@ Begin DesignProperties =
    End
 End
 ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'VIEW', @level1name = N'V_Performance';
-
-
-GO
-
-EXECUTE sp_addextendedproperty @name = N'MS_DiagramPaneCount', @value = 1, @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'VIEW', @level1name = N'V_Performance';
-
-
 GO
 

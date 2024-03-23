@@ -12,7 +12,8 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT CM.Rec_Id Category_Id,
-           TRIM(CM.Category_Name) Category_Name
+           TRIM(CM.Category_Name) Category_Name,
+            LEFT(UPPER(TRIM(Category_Name)), 1) + SUBSTRING(LOWER(TRIM(Category_Name)), 2, LEN(TRIM(Category_Name)) - 1) Cat
     FROM [TestFinanceTracker].[DBO].[SD_Category_Master] CM
     WHERE Active = 1 AND CM.[Category_TYPE_ID] = IIF(@Type_Id = 0, CM.Category_TYPE_ID, @Type_Id) 
     ORDER BY Category_Name

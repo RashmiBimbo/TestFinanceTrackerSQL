@@ -31,30 +31,31 @@ BEGIN
         IF EXISTS(SELECT * FROM SD_Performance WHERE REC_ID = @Rec_Id) --Check if record exists          
         BEGIN
 
-            DECLARE @ReportType CHAR(10) = (SELECT RM.[Type] FROM SD_Reports_Master RM WHERE RM.Rec_ID = @Report_Id);
+            DECLARE @ReportType VARCHAR(50) = (SELECT RM.[Type] FROM SD_Reports_Master RM WHERE RM.Rec_ID = @Report_Id);
 
             BEGIN TRANSACTION;
             
             UPDATE [dbo].[SD_Performance]
             SET 
                 [Active] = 0,
+                [Comments] = NULL,
                 [Modified_By] = @Created_By,
                 [Modified_Date] = GETDATE()                   
             WHERE 
                 Rec_ID = @Rec_Id;
 
             INSERT INTO [dbo].[SD_Performance]
-                (
-                     [User_Id]
-                    ,[Report_Id]
-                    ,[Report_Type]
-                    ,[Add_Date]
-                    ,[Month_From_Date]
-                    ,[Month_To_Date]
-                    ,[Month_Week_No]
-                    ,[Location]
-                    ,[Created_By]
-                )
+            (
+                 [User_Id]
+                ,[Report_Id]
+                ,[Report_Type]
+                ,[Add_Date]
+                ,[Month_From_Date]
+                ,[Month_To_Date]
+                ,[Month_Week_No]
+                ,[Location]
+                ,[Created_By]
+            )
             VALUES (@User_Id, @Report_Id, @ReportType, @Add_Date, @Submit_From_Date, @Submit_To_Date, @Submit_Week_No, @Location, @Created_By);
         END
         ELSE
@@ -68,6 +69,5 @@ BEGIN
         SELECT ERROR_MESSAGE();
     END CATCH;
 END;
-
 GO
 

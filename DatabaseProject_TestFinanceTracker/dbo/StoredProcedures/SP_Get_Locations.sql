@@ -14,7 +14,7 @@ BEGIN
            TRIM(LM.Loc_Name) [Loc_Name],
            Company_Id,
            TRIM(LM.[ADDRESS]) [Loc_Address]
-    FROM [TestFinanceTracker].[DBO].[SD_Location_Master] LM
+    FROM [DBO].[SD_Location_Master] LM
     WHERE Company_Id = IIF(ISNULL(@Company_Id, '') = '', Company_Id, @Company_Id)
         and Active = 1
     ORDER BY Loc_Name
