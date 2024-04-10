@@ -1,10 +1,14 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 -- =============================================
 -- Author:		<Rashmi Gupta>
 -- Create date: <12-02-2024>
 -- Description:	<Get the tasks submitted by the SubOrdinates of a particular approver in a date range>
 -- =============================================
 -- Create the stored procedure in the specified schema
-CREATE PROCEDURE [dbo].[SP_Get_Submit_Tasks_SubOrdinates]
+ALTER PROCEDURE [dbo].[SP_Get_Submit_Tasks_SubOrdinates]
 	@From_Date DATE = NULL
    ,@To_Date DATE = NULL
    ,@Type char(50) = NULL
@@ -24,6 +28,8 @@ BEGIN
     SP_Get_Submit_Tasks_SubOrdinates NULL, NULL, '', '', 1 
     SP_Get_Submit_Tasks_SubOrdinates NULL, NULL, '', 'Half Yearly', 1, '', 0, 3, 'che'
 */
+    DECLARE @FebLstDay INT = IIF((YEAR(GETDATE()) % 4 = 0) AND (YEAR(GETDATE()) % 100 != 0) OR (YEAR(GETDATE()) % 400 = 0), 29, 28);
+    DECLARE @DateFormat VARCHAR(10) = 'dd-MMM-yyyy';
 	SET @Approver_Id = UPPER(TRIM(@Approver_Id)); 
 	SET @User_Id = UPPER(TRIM(@User_Id)); 
 	SET @Type = UPPER(TRIM(@Type)); 
@@ -39,26 +45,52 @@ BEGIN
         ,RM.[Type] [Type]
         ,IIF
         (
-            ISNUMERIC(Due_Date) = 1 
+            ISNUMERIC(RM.Due_Date) = 1
             ,CASE
                 WHEN RM.Due_Date = '41' THEN '01-Jan-'+ CAST(YEAR(GETDATE()) AS VARCHAR(4))  --Report for First Half
                 WHEN RM.Due_Date = '42' THEN '01-Jul-'+ CAST(YEAR(GETDATE()) AS VARCHAR(4))  --Report for 2nd Half
                 ELSE 
-                FORMAT
-                (   -- dd-MMM-yyyy format e.g. 10-Jan-2024
-                   DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(P.Month_To_Date), MONTH(P.Month_To_Date), RM.Due_Date)), 'dd-MMM-yyyy'
-                )
-            END 
+                CASE
+                    WHEN RM.Due_Date > 28 THEN
+                       CASE --when mnth is FEB and Due date is more than 28
+                           WHEN MONTH(P.Month_To_Date) = 2 THEN                                      
+                                FORMAT
+                                (   -- dd-MMM-yyyy format e.g. 10-Jan-2024
+                                   DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(P.Month_To_Date), MONTH(P.Month_To_Date), @FebLstDay)), @DateFormat
+                                ) -- Non-leap year February
+                            ELSE
+                                CASE -- when given Due date is 31 but mnth has only 30 days
+                                    WHEN ISDATE(CONVERT(varchar, DATEFROMPARTS(YEAR(P.Month_To_Date), MONTH(P.Month_To_Date), RM.Due_Date))) = 0 THEN 
+                                     FORMAT
+                                     (  
+                                        DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(P.Month_To_Date), MONTH(P.Month_To_Date), 30)), @DateFormat
+                                     )
+                                    ELSE
+                                     FORMAT
+                                     (   
+                                        DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(P.Month_To_Date), MONTH(P.Month_To_Date), RM.Due_Date)), @DateFormat
+                                     )
+                                END
+                       END
+                    ELSE
+                    FORMAT
+                    (  
+                       DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(P.Month_To_Date), MONTH(P.Month_To_Date), RM.Due_Date)), @DateFormat
+                    )
+                END
+            END
             ,IIF
-            (
-                TRIM(ISNULL(RM.Due_Date,'')) = '', 
+             (
+            -- Every Weekday e.g. Every Thusrday
+                ISNULL(TRIM(RM.Due_Date),'') = '', 
                 '',
                 'Every ' + LEFT(UPPER(TRIM(RM.Due_Date)), 1) + SUBSTRING(LOWER(TRIM(RM.Due_Date)), 2, LEN(TRIM(RM.Due_Date)) - 1)
-            )
+             )
         ) 
         [Due_Date]
         , FORMAT(P.Submit_Date, 'dd-MMM-yyyy') Submit_Date
         , FORMAT(P.Approve_Date, 'dd-MMM-yyyy') Approve_Date
+        , LM.Email
 	    FROM SD_UserTaskAssignment U 
         INNER JOIN SD_Performance P ON UPPER(TRIM(U.UserId)) = UPPER(TRIM(P.[User_Id])) AND P.Report_Id = U.ReportId
         INNER JOIN SD_Login_Master LM ON UPPER(TRIM(LM.User_Id)) = UPPER(TRIM(U.UserId))
@@ -105,4 +137,3 @@ BEGIN
         ORDER BY Due_Date, [User_Name], Report_Name, Submit_Date DESC
 END
 GO
-

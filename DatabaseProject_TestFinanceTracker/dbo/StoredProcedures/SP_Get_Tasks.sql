@@ -1,9 +1,13 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 -- =============================================
 -- Author:		<Rashmi Gupta>
 -- Create date: <12-01-2024>
 -- Description:	<Get the added/submitted/approved tasks from sd_performance>
 -- =============================================
-CREATE PROCEDURE [dbo].[SP_Get_Tasks]
+ALTER PROCEDURE [dbo].[SP_Get_Tasks]
     @Start_Date DATE = NULL,
     @End_Date DATE = NULL,
     @User_Id VARCHAR(20) = null,
@@ -21,7 +25,7 @@ AS
 BEGIN
     /*
     SP_Get_Tasks  '2024-02-01', '2024-02-29', 'ASHISH', 2, 16
-    SP_Get_Tasks  '2024-02-01', '2024-02-29', 'ASHISH', 2, 16
+    SP_Get_Tasks  '2024-03-01', '2024-03-31', 'ASHISH', 2, 16
     SP_Get_Tasks  NULL, NULL, NULL, 0, 0, 0, 0, '', 1, 0, 0, 0 
     SP_Get_Tasks  NULL, NULL, NULL, 0, 0, 0, 0, '', 0, 0, 0, 0, '' 
     SP_Get_Tasks  NULL, NULL, '', 0, 0, 0, 0, '', 1, 3, 1, 2024 
@@ -32,10 +36,11 @@ BEGIN
 
     DECLARE @NxtMnthToDt DATE = DATEADD(MONTH, 1, @End_Date);
     DECLARE @NxtMnthLastDt INT = DAY(EOMONTH(@NxtMnthToDt));
+    DECLARE @FebLstDay INT = IIF((YEAR(GETDATE()) % 4 = 0) AND (YEAR(GETDATE()) % 100 != 0) OR (YEAR(GETDATE()) % 400 = 0), 29, 28);
+    DECLARE @DateFormat VARCHAR(10) = 'dd-MMM-yyyy';
     DECLARE @CrntMnth AS int = MONTH(GETDATE());
     DECLARE @PreMnth AS int = MONTH(DATEADD(MONTH, -1, GETDATE())) ;
 
-     
     SET @User_Id = UPPER(TRIM(@User_Id));
     SET @Location_Id = UPPER(TRIM(@Location_Id));
     SET @Type = UPPER(TRIM(@Type));
@@ -72,14 +77,38 @@ BEGIN
                         WHEN RM.Due_Date = '41' THEN '01-Jan-'+ CAST(YEAR(GETDATE()) AS VARCHAR(4))  --Report for First Half
                         WHEN RM.Due_Date = '42' THEN '01-Jul-'+ CAST(YEAR(GETDATE()) AS VARCHAR(4))  --Report for 2nd Half
                         ELSE 
-                        FORMAT
-                        (   -- dd-MMM-yyyy format e.g. 10-Jan-2024
-                           DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), RM.Due_Date)), 'dd-MMM-yyyy'
-                        )
-                    END 
-                    -- Every Weekday e.g. Every Thusrday
+                        CASE
+                            WHEN RM.Due_Date > 28 THEN
+                               CASE --when mnth is FEB and Due date is more than 28
+                                   WHEN MONTH(SP.Month_To_Date) = 2 THEN                                      
+                                        FORMAT
+                                        (   -- dd-MMM-yyyy format e.g. 10-Jan-2024
+                                           DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), @FebLstDay)), @DateFormat
+                                        ) -- Non-leap year February
+                                    ELSE
+                                        CASE -- when given Due date is 31 but mnth has only 30 days
+                                            WHEN ISDATE(CONVERT(varchar, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), RM.Due_Date))) = 0 THEN 
+                                             FORMAT
+                                             (  
+                                                DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), 30)), @DateFormat
+                                             )
+                                            ELSE
+                                             FORMAT
+                                             (   
+                                                DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), RM.Due_Date)), @DateFormat
+                                             )
+                                        END
+                               END
+                            ELSE
+                            FORMAT
+                            (  
+                               DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), RM.Due_Date)), @DateFormat
+                            )
+                        END
+                    END
                     ,IIF
                      (
+                    -- Every Weekday e.g. Every Thusrday
                         ISNULL(TRIM(RM.Due_Date),'') = '', 
                         '',
                         'Every ' + LEFT(UPPER(TRIM(RM.Due_Date)), 1) + SUBSTRING(LOWER(TRIM(RM.Due_Date)), 2, LEN(TRIM(RM.Due_Date)) - 1)
@@ -90,8 +119,8 @@ BEGIN
                 ,SP.Month_To_Date [To_Date]
                 ,SP.Month_Week_No [Week_No]            
                 ,SP.Year_Half_No [Half_No]            
-                ,FORMAT( SP.[Add_Date], 'dd-MMM-yyyy' ) [Add_Date]
-                ,FORMAT( SP.[Submit_Date], 'dd-MMM-yyyy' ) [Submit_Date]
+                ,FORMAT( SP.[Add_Date], @DateFormat ) [Add_Date]
+                ,FORMAT( SP.[Submit_Date], @DateFormat ) [Submit_Date]
                 ,IIF
                 ( 
                     SP.[Submit_Date] IS NULL,
@@ -99,8 +128,8 @@ BEGIN
                     IIF(Approve_Date IS NULL, 'Pending Approval', 'Approved')
                 )
                 [Status]
-                , [Type]
-                ,FORMAT( SP.[Approve_Date], 'dd-MMM-yyyy' ) [Approve_Date]
+                ,[Type]
+                ,FORMAT( SP.[Approve_Date], @DateFormat ) [Approve_Date]
                 ,SP.[Location]
                 ,CASE 
                     WHEN MONTH(Month_To_Date) BETWEEN @PreMnth AND @CrntMnth THEN 'Edit'
@@ -156,7 +185,7 @@ BEGIN
 --                     ISNUMERIC(Due_Date) = 1 
 --                     ,FORMAT
 --                      (   -- dd-MMM-yyyy format e.g. 10-Jan-2024
---                         DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), RM.Due_Date)), 'dd-MMM-yyyy'
+--                         DATEADD(MONTH, 1, DATEFROMPARTS(YEAR(SP.Month_To_Date), MONTH(SP.Month_To_Date), RM.Due_Date)), @DateFormat
 --                      )
 --                     -- Every Weekday e.g. Every Thusrday
 --                     -- ,'Every ' + LEFT(RM.Due_Date,1) + SUBSTRING(LOWER(RM.Due_Date), 2, LEN(RM.Due_Date) - 1)
@@ -170,5 +199,5 @@ BEGIN
 --                 ) 
 --                 [Due_Date]
 END;
-GO
 
+GO
