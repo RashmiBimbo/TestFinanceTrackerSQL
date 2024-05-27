@@ -5,8 +5,8 @@
 -- Description:	<Get the performance>
 -- =============================================
 CREATE PROCEDURE [dbo].[SP_Get_Performance_Review_Plant]
-    @Month   CHAR(2) ,
-    @Year   CHAR(4)
+    @Month CHAR(2) ,
+    @Year  CHAR(4)
 AS
 BEGIN
     /*
@@ -33,22 +33,21 @@ BEGIN
      DECLARE @DFORMAT AS CHAR(15) = ''dd-MMM-yyyy'';
      DECLARE @MFORMAT AS CHAR(15) = ''MMM, yyyy'';
 
+     DECLARE @Prefix as VARCHAR(10) = ''Every '';
+
      SELECT ROW_NUMBER() OVER (ORDER BY REPORT_NAME ) SNo, *
      INTO #TEMP
      FROM
         (
             SELECT
-                CM.[Category_Name] AS Category_Name,
-                FORMAT(DATEFROMPARTS(@YEAR, @MONTH, 1), @MFORMAT) AS [Month],
-                RM.[Report_Name] AS [Report_Name],
+                CM.[Category_Name] Category_Name,
+                FORMAT(DATEFROMPARTS(@YEAR, @MONTH, 1), @MFORMAT) [Month],
+                RM.[Report_Name],
                 SP.[User_Id],
                 SP.[Submit_Date],
                 RM.[Priority],
                 RM.[Weight],
-                IIF(ISNUMERIC(RM.Due_Date) = 1, 
-                    FORMAT(DATEFROMPARTS(@YEAR, @MONTH, CAST(RM.Due_Date AS INT)), @DFORMAT), 
-                    ''Every'' + RM.Due_Date) 
-                AS [Submission_Due_Date],
+              
                 RM.[Due_Date],
                 IIF(Submit_Date < CAST(DDate AS DATE), [Weight], 0) [Calculated_Weight],
                 LM.[User_Name] AS [User_Name]  
@@ -67,12 +66,7 @@ BEGIN
                 SP.[User_Id],
                 SP.[Submit_Date],
                 RM.[Priority],
-                RM.[Weight],
-                IIF(ISNUMERIC(RM.Due_Date) = 1, 
-                    FORMAT(DATEFROMPARTS(@YEAR, @MONTH, CAST(RM.Due_Date AS INT)), @DFORMAT),
-                    ''Every'' + RM.Due_Date
-                    ) 
-                AS [Submission_Due_Date],
+                RM.[Weight],              
                 RM.[Due_Date],
                 IIF(Submit_Date < CAST(DDate AS DATE), [Weight], 0) [Calculated_Weight],
                 LM.[User_Name] AS [User_Name]  
@@ -90,32 +84,35 @@ BEGIN
                 AND (LM.Active = 1 OR LM.Active IS NULL)
                 AND CLM.YYear = @YEAR
                 AND CLM.MonthNo = @MONTH
-        )
-     AS TBL;    
+        ) TBL;    
 
-       SELECT * FROM #TEMP;
+    SELECT * FROM #TEMP;
 
-       SELECT
+    SELECT
         P.SNo,
         P.Category_Name,
         P.Month,
-        P.Submission_Due_Date AS [Due Date],
+        --P.Submission_Due_Date AS [Due Date],
         P.Report_Name,
         P.Priority,
         P.Weight,
         P.[User_Name],
         ' + @UserIds + '
-    FROM (
-            SELECT SNo, Category_Name, Month, Submission_Due_Date, Report_Name, Priority, Weight, [User_Name]
-        FROM #TEMP
+    FROM 
+        (
+            SELECT SNo, Category_Name, Month, Report_Name, Priority, Weight, [User_Name]
+            --, Submission_Due_Date
+            FROM #TEMP
         ) P
-        INNER JOIN (
+        INNER JOIN 
+        (
             SELECT SNO, ' + @UserIds + '
-        FROM #TEMP
-            PIVOT (
+            FROM #TEMP
+            PIVOT 
+            (
                 MAX(Submit_Date) FOR User_Id IN (' + @UserIds + ')
-            ) AS  PivotTable
-    ) P1 ON P.SNo = P1.SNO
+            ) PivotTable
+        ) P1 ON P.SNo = P1.SNO
 
     UNION
 
@@ -123,18 +120,26 @@ BEGIN
         P1.SNo,
         P1.Category_Name,
         P1.Month,
-        P1.Submission_Due_Date AS [Due Date],
+       -- P1.Submission_Due_Date AS [Due Date],
         P1.Report_Name,
         P1.Priority,
         P1.Weight,
         NULL AS [User_Name], -- Assuming User_Name is not present in P1
         ' + @UserIds + '
-    FROM (
-            SELECT SNO, ' + @UserIds + '
-        FROM #TEMP
-            PIVOT (
-                SUM(Calculated_Weight) FOR User_Id IN (' + @UserIds + ')
-            ) AS PivotTable
+    FROM
+        (
+            SELECT SNO, Category_Name, Month,
+       -- P1.Submission_Due_Date AS [Due Date],
+         Report_Name,
+         Priority,
+         Weight,
+        NULL AS [User_Name],
+        ' + @UserIds + '
+            FROM #TEMP
+                PIVOT 
+                (
+                    SUM(Calculated_Weight) FOR User_Id IN (' + @UserIds + ')
+                ) PivotTable
         ) P1;';
  
     -- Execute the dynamic query

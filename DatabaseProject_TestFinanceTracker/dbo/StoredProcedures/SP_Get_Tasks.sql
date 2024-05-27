@@ -1,13 +1,9 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- =============================================
 -- Author:		<Rashmi Gupta>
 -- Create date: <12-01-2024>
 -- Description:	<Get the added/submitted/approved tasks from sd_performance>
 -- =============================================
-ALTER PROCEDURE [dbo].[SP_Get_Tasks]
+CREATE PROCEDURE [dbo].[SP_Get_Tasks]
     @Start_Date DATE = NULL,
     @End_Date DATE = NULL,
     @User_Id VARCHAR(20) = null,
@@ -199,5 +195,5 @@ BEGIN
 --                 ) 
 --                 [Due_Date]
 END;
-
 GO
+

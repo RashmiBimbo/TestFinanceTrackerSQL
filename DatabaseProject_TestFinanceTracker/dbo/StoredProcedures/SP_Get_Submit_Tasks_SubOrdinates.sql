@@ -1,14 +1,10 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- =============================================
 -- Author:		<Rashmi Gupta>
 -- Create date: <12-02-2024>
 -- Description:	<Get the tasks submitted by the SubOrdinates of a particular approver in a date range>
 -- =============================================
 -- Create the stored procedure in the specified schema
-ALTER PROCEDURE [dbo].[SP_Get_Submit_Tasks_SubOrdinates]
+CREATE PROCEDURE [dbo].[SP_Get_Submit_Tasks_SubOrdinates]
 	@From_Date DATE = NULL
    ,@To_Date DATE = NULL
    ,@Type char(50) = NULL
@@ -137,3 +133,4 @@ BEGIN
         ORDER BY Due_Date, [User_Name], Report_Name, Submit_Date DESC
 END
 GO
+

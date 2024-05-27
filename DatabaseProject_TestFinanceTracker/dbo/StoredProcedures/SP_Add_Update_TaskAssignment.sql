@@ -27,7 +27,7 @@ BEGIN
         (
             [UserId], [ReportId], [ReportName], [Created_By], [Approver], [Active]    
         )
-        SELECT UPPER(TRIM([UserId])), [ReportId], [ReportName], UPPER(TRIM([Created_By])), UPPER(TRIM([Approver])), CAST([Active] AS BIT)      
+        SELECT UPPER(TRIM([UserId])), [ReportId], [ReportName], TRIM([Created_By]), UPPER(TRIM([Approver])), CAST([Active] AS BIT)      
         FROM OPENJSON(@Collection)
         WITH
         (
@@ -53,7 +53,7 @@ BEGIN
                 [target].[Active]        = [source].[ACTIVE],
                 [target].[ReportName]    = [source].[ReportName],
                 [target].[Approver]      = UPPER(TRIM([source].[Approver])),
-                [target].[MODIFIED_BY]   = UPPER(TRIM([source].[Created_By])),
+                [target].[MODIFIED_BY]   = TRIM([source].[Created_By]),
                 [target].[MODIFIED_DATE] = GETDATE()
         WHEN NOT MATCHED THEN --if the row not exists, add it            
             INSERT
@@ -63,7 +63,9 @@ BEGIN
             VALUES
             ( 
                 [source].[UserId], [source].[ReportId], [source].[ReportName], GETDATE(), [source].[Created_By], [source].[Approver], [source].[ACTIVE]
-            );
+            )
+            -- OUTPUT $action, inserted.*, inserted.*
+            ;
         COMMIT;
     END TRY
     BEGIN CATCH
@@ -71,6 +73,21 @@ BEGIN
         SELECT ERROR_MESSAGE();
     END CATCH
 END;
+    /* 
+        SP_Add_Update_TaskAssignment
+        '
+            [
+              {
+                "USER_ID": "ASHISH",
+                "REPORT_ID": "509",
+                "REPORT_NAME": "plnt ir hy 1",
+                "CREATED_BY": "Ashish",
+                "APPROVER": "ASHISH",
+                "ACTIVE": "0"
+              }
+            ]
+        '
+    */
     /* 
         SP_Submit_Tasks
         '[

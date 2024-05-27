@@ -5,6 +5,7 @@ CREATE TABLE [dbo].[SD_Reports_Master] (
     [Priority]      INT           NOT NULL,
     [Weight]        INT           NOT NULL,
     [Type]          VARCHAR (50)  NOT NULL,
+    [TypeId]        INT           NOT NULL,
     [Due_Date]      VARCHAR (10)  NOT NULL,
     [Active]        BIT           CONSTRAINT [DEFAULT_SD_Reports_Master_Active] DEFAULT ((1)) NOT NULL,
     [Created_Date]  DATETIME      CONSTRAINT [DEFAULT_SD_Reports_Master_Created_Date] DEFAULT (getdate()) NOT NULL,

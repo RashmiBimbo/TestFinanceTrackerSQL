@@ -1,13 +1,9 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- =============================================
 -- Author:      <Rashmi Gupta>
 -- Create date: <25-01-2024>
 -- Description: <Select tasks for a particular user which are not added. Its used in Performance.GVAddDS>
 -- =============================================
-ALTER PROCEDURE [dbo].[SP_Get_UserTasks]
+CREATE PROCEDURE [dbo].[SP_Get_UserTasks]
     @User_Id VARCHAR(20) = NULL
    ,@From_Date DATE = NULL
    ,@To_Date DATE = null
@@ -18,7 +14,7 @@ ALTER PROCEDURE [dbo].[SP_Get_UserTasks]
 AS
 BEGIN
     /*
-        SP_Get_UserTasks '', '2024-01-01', '2024-01-31', 0,'W'
+        SP_Get_UserTasks '', '2024-03-01', '2024-03-31', 0,'W'
         SP_Get_UserTasks 'ashish', '2024-02-01', '2024-02-29', 0,'W'
         SP_Get_UserTasks NULL, NULL, NULL, 0, NULL, 0, 0
     */
@@ -55,8 +51,8 @@ BEGIN
                          (   -- dd-MMM-yyyy format e.g. 10-Jan-2024
                             DATEFROMPARTS
                             (
-                               YEAR(@NxtMnthToDt), MONTH(@NxtMnthToDt),          --take next month's month no. and year
-                               IIF( RM.Due_Date > @NxtMnthLastDt, @NxtMnthLastDt, RM.Due_Date) --e.g. if duedt is > next month's last date, take last date otherwise due date             
+                               YEAR(@NxtMnthToDt), MONTH(@NxtMnthToDt),          --take next month' month no. and year
+                               IIF( RM.Due_Date > @NxtMnthLastDt, @NxtMnthLastDt, RM.Due_Date) --e.g. if duedt is > 28 and next month is feb, return                                    
                             )
                             ,'dd-MMM-yyyy'                            
                          )
@@ -137,3 +133,4 @@ BEGIN
     END CATCH;
 END;
 GO
+
