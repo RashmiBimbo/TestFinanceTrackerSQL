@@ -35,8 +35,8 @@ BEGIN
     END
     ELSE IF ISNUMERIC(@DueDateTemp) = 1 AND @DueMonth > 0 AND @DueYr > 0
     BEGIN
-        IF @ReportType = 2  -- Monthly
-        BEGIN
+        -- IF @ReportType = 2  -- Monthly
+        -- BEGIN
             SET @DueDate = 
                 CASE
                     WHEN CAST(@DueDateTemp AS INT) > 28 THEN
@@ -54,9 +54,9 @@ BEGIN
                     ELSE
                         FORMAT(DATEFROMPARTS(@DueYr, @DueMonth, CAST(@DueDateTemp AS INT)), @DateFormat)
                 END;
-        END
-        ELSE 
-            RETURN @DefualtDate;
+        -- END
+        -- ELSE 
+        --     RETURN @DefualtDate;
     END
     RETURN @DueDate;
 END

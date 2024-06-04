@@ -9,6 +9,7 @@ CREATE TABLE [dbo].[SD_Calender_Master] (
     [FinancialHalf]          AS       (case when CONVERT([int],datepart(month,[DDate]))>(3) AND CONVERT([int],datepart(month,[DDate]))<(10) then '1' else '2' end),
     [HalfYearlyTaskAddMonth] AS       (case when CONVERT([int],datepart(month,[DDate]))>(3) AND CONVERT([int],datepart(month,[DDate]))<(10) then '8' else '2' end),
     [Half]                   AS       (case when CONVERT([int],datepart(quarter,[ddate]),(0))<(3) then '1' else '2' end),
+    [AnnualTaskAddMonth]     AS       ((2)),
     [DaysNo]                 AS       (datepart(weekday,[DDate])),
     [DaysName]               AS       (datename(weekday,[DDate])),
     [MonthName]              AS       (datename(month,[DDate])),

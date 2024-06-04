@@ -4,7 +4,7 @@
 -- Description:	<Add OR Update UserTaskAssignment. It is used in Finance_Tracker\UserTaskAssignment.aspx.cs\BtnAssign_Click >
 -- =============================================
 
-CREATE PROCEDURE [dbo].[SP_Add_Update_TaskAssignment] 
+ALTER PROCEDURE [dbo].[SP_Add_Update_TaskAssignment] 
     @Collection VARCHAR(MAX)
 AS
 BEGIN
@@ -73,6 +73,21 @@ BEGIN
         SELECT ERROR_MESSAGE();
     END CATCH
 END;
+    /* 
+        SP_Add_Update_TaskAssignment
+        '
+            [
+              {
+                "USER_ID": "ASHISH",
+                "REPORT_ID": "509",
+                "REPORT_NAME": "plnt ir hy 1",
+                "CREATED_BY": "Ashish",
+                "APPROVER": "ASHISH",
+                "ACTIVE": "0"
+              }
+            ]
+        '
+    */
     /* 
         SP_Add_Update_TaskAssignment
         '

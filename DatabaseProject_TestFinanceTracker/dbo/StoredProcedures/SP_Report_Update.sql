@@ -3,14 +3,15 @@
 -- Create date: <05-01-2024>
 -- Description:	<Get the Category Type from SD_Category_Type_Master>
 -- =============================================
-CREATE PROCEDURE [dbo].[SP_Report_Update]
+ALTER PROCEDURE [dbo].[SP_Report_Update]
      @Name        VARCHAR(150) 
     ,@Category_Id INT     
     ,@Priority    INT 
     ,@Weight      INT 
-    ,@Type_Id     VARCHAR(50) 
+    ,@Type_Id     INT 
     ,@Due_Date    VARCHAR(10) 
-    ,@Modified_By VARCHAR(20)     
+    ,@Modified_By VARCHAR(20) 
+    ,@TypeName    VARCHAR(50)     
     ,@RecId       INT
 AS
 BEGIN
@@ -51,8 +52,9 @@ BEGIN
                    ,[Category_Id] = @Category_Id
                    ,[Priority] = @Priority
                    ,[Weight] = @Weight
-                   ,[Type] = @Type_Id
+                   ,[TypeId] = @Type_Id
                    ,[Due_Date] = @Due_Date
+                   ,[Type] = @TypeName
                    ,[Modified_By] = @Modified_By 
                    ,[Modified_Date] = GETDATE()
                 WHERE Rec_ID = @RecId            

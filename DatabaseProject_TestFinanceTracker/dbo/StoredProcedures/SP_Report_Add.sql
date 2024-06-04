@@ -3,14 +3,15 @@
 -- Create date: <05-01-2024>
 -- Description:	<Get the Category Type from SD_Category_Type_Master>
 -- =============================================
-CREATE PROCEDURE [dbo].[SP_Report_Add]
+ALTER PROCEDURE [dbo].[SP_Report_Add]
      @Name        VARCHAR(150) 
     ,@Category_Id INT     
     ,@Priority    INT 
     ,@Weight      INT 
-    ,@Type_Id     VARCHAR(50) 
+    ,@Type_Id     INT
     ,@Due_Date    VARCHAR(10) 
     ,@Created_By  VARCHAR(20)     
+    ,@TypeName    VARCHAR(50) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -34,10 +35,10 @@ BEGIN
 
             INSERT INTO [dbo].[SD_Reports_Master]
             (
-                [Report_Name], [Category_Id], [Priority], [Weight], [Type], [Due_Date], [Created_By]
+                [Report_Name], [Category_Id], [Priority], [Weight], [TypeId], [Due_Date], [Created_By], [Type]
             )
             VALUES
-            ( @Name ,@Category_Id ,@Priority ,@Weight   ,@Type_Id  ,@Due_Date ,@Created_By )
+            ( @Name ,@Category_Id ,@Priority ,@Weight, @Type_Id  ,@Due_Date ,@Created_By, @TypeName)
 
             COMMIT;        
         END
