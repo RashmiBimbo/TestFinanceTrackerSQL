@@ -1,50 +1,72 @@
 
-ALTER PROCEDURE [dbo].[SP_Add_Update_UsersTasksMonthly] 
+CREATE PROCEDURE [dbo].[SP_Add_Update_UsersTasksMonthly] 
+  @CrntMnth INT = 0
+ ,@DueYr    INT = 0
+ ,@UTARecIdList NVARCHAR(MAX) = NULL
 AS
 /* 
     TRUNCATE TABLE SD_UsersTasksMonthly;
-    EXEC SP_Add_Update_UsersTasksMonthly;
+    EXEC SP_Add_Update_UsersTasksMonthly 0, 0, '1112,1113,1114';
     SELECT * FROM SD_UsersTasksMonthly;
 
     select distinct * froM SD_UsersTasksMonthly u inner join SD_Reports_Master rm on rm.rec_id = u.ReportId
 */
 BEGIN
-
     SET NOCOUNT ON;
 
-    DECLARE @RptTypId INT ;
-    DECLARE @CrntMnth INT = DATEPART(MONTH, GETDATE());
-    DECLARE @DueMnth  INT = MONTH(DATEADD(MONTH, 2, GETDATE()));
-    DECLARE @DueYr    INT = DATEPART(YEAR, DATEADD(MONTH, 2, GETDATE())); 
+    DECLARE @EffectiveIdArray TABLE (ID INT);
+    DECLARE @RptTypId INT, @HalfYearlyTaskAddMonth INT, @QuarterlyTaskAddMonth INT , @AnnualTaskAddMonth INT  ;
+    DECLARE @DueMnth  INT = @CrntMnth + 2;
 
-    DECLARE @HalfYearlyTaskAddMonth INT ;
-    SELECT @HalfYearlyTaskAddMonth = HalfYearlyTaskAddMonth FROM SD_Calender_Master WHERE HalfYearlyTaskAddMonth = @CrntMnth;
-
-    DECLARE @QuarterlyTaskAddMonth INT ;
-    SELECT @QuarterlyTaskAddMonth = QuarterlyTaskAddMonth FROM SD_Calender_Master WHERE QuarterlyTaskAddMonth = @CrntMnth;
-
-    DECLARE @AnnualTaskAddMonth INT ;
-    SELECT @AnnualTaskAddMonth = AnnualTaskAddMonth FROM SD_Calender_Master WHERE AnnualTaskAddMonth = @CrntMnth;
-    
-    -- SELECT @CrntMnth, @HalfYearlyTaskAddMonth H, @QuarterlyTaskAddMonth Q, @AnnualTaskAddMonth A;
-
-    IF OBJECT_ID('tempdb..#AUTM') IS NOT NULL
-        DROP TABLE #AUTM;
-
-    SELECT *
-    INTO #AUTM FROM
-    (
-        SELECT ROW_NUMBER() OVER (partition by ReportId, UserId order by ReportId, UserId) RN, LM.User_Id UserId, RM.Rec_ID ReportId, RM.Report_Name ReportName, RM.TypeId RptTypId, RM.[Type], RM.Due_Date, UTA.Approver
-        FROM SD_Reports_Master RM
-            INNER JOIN SD_UserTaskAssignment UTA ON RM.Rec_ID = UTA.ReportId
-            INNER JOIN SD_Login_Master LM ON LM.User_Id = UTA.UserId
-        WHERE ISNULL(TRIM(UTA.UserId),'') != '' AND ISNULL(TRIM(UTA.Approver),'') !='' AND LM.Active = 1 AND RM.Active = 1 AND UTA.Active = 1
-    ) TBL WHERE RN = 1;
-
-    -- SELECT * FROM #AUTM;
-    
     BEGIN TRY
 
+        IF ISNULL(@CrntMnth, 0) < 1  
+        BEGIN
+            SET @CrntMnth = DATEPART(MONTH, GETDATE());
+            SET @DueMnth  = MONTH(DATEADD(MONTH, 2, GETDATE()));
+            SET @DueYr    = DATEPART(YEAR, DATEADD(MONTH, 2, GETDATE())); 
+        END 
+
+        SELECT @HalfYearlyTaskAddMonth = HalfYearlyTaskAddMonth FROM SD_Calender_Master WHERE HalfYearlyTaskAddMonth = @CrntMnth;
+
+        SELECT @QuarterlyTaskAddMonth = QuarterlyTaskAddMonth FROM SD_Calender_Master WHERE QuarterlyTaskAddMonth = @CrntMnth;
+
+        SELECT @AnnualTaskAddMonth = AnnualTaskAddMonth FROM SD_Calender_Master WHERE AnnualTaskAddMonth = @CrntMnth;
+
+        -- SELECT @CrntMnth, @HalfYearlyTaskAddMonth H, @QuarterlyTaskAddMonth Q, @AnnualTaskAddMonth A;
+
+        IF OBJECT_ID('tempdb..#AUTM') IS NOT NULL
+            DROP TABLE #AUTM;
+
+        SELECT *
+        INTO #AUTM FROM
+        (
+            SELECT ROW_NUMBER() OVER (partition by ReportId, UserId order by ReportId, UserId) RN, LM.User_Id UserId, RM.Rec_ID ReportId, RM.Report_Name ReportName, RM.TypeId RptTypId, RM.[Type], RM.Due_Date, UTA.Approver, UTA.RecId UTARecId 
+            FROM SD_Reports_Master RM
+                INNER JOIN SD_UserTaskAssignment UTA ON RM.Rec_ID = UTA.ReportId
+                INNER JOIN SD_Login_Master LM ON LM.User_Id = UTA.UserId
+            WHERE ISNULL(TRIM(UTA.UserId),'') != '' AND ISNULL(TRIM(UTA.Approver),'') !='' AND LM.Active = 1 AND RM.Active = 1 AND UTA.Active = 1
+        ) TBL WHERE RN = 1;
+
+        -- SELECT * FROM #AUTM;
+
+        IF @UTARecIdList IS NOT NULL        
+        BEGIN
+            -- Split the string and insert into the table variable
+            ;WITH Split AS (
+                SELECT [value] ID FROM STRING_SPLIT(@UTARecIdList, ',')
+            )
+            INSERT INTO @EffectiveIdArray (ID)
+            SELECT TRY_CAST(ID AS INT) FROM Split WHERE TRY_CAST(ID AS INT) IS NOT NULL;
+
+            DELETE FROM #AUTM
+            WHERE UTARecId NOT IN (
+                SELECT ID FROM @EffectiveIdArray
+            );
+        END
+        
+        -- SELECT * FROM #AUTM;
+    
         BEGIN TRANSACTION;
 
         MERGE INTO SD_UsersTasksMonthly AS Dest

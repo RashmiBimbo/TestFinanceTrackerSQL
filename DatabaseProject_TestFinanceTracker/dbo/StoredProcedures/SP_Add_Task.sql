@@ -3,7 +3,7 @@
 -- Create date: <25-01-2024>
 -- Description: <Add the task if not present already>
 -- =============================================
-CREATE PROCEDURE [dbo].[SP_Add_Task]
+ALTER PROCEDURE [dbo].[SP_Add_Task]
     @User_Id VARCHAR(20),
     @Report_Id INT,
     @Add_Date DATE,

@@ -3,7 +3,7 @@
 -- Create date: <14-05-2024>
 -- Description:	<SQL equivalent of string.IsNullOrEmptyOrWhiteSpace>
 -- =============================================
-CREATE FUNCTION IsEmpty 
+ALTER FUNCTION IsEmpty 
 (
 	@Obj VARCHAR(MAX)
 )

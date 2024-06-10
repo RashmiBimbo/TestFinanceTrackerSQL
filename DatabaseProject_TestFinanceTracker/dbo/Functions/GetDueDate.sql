@@ -3,7 +3,7 @@
 --- Created Date  : 22-05-2024
 --- Modified Date : 23-05-2024
 
-CREATE FUNCTION [dbo].[GetDueDate] 
+ALTER FUNCTION [dbo].[GetDueDate] 
 (
      @DueDateTemp VARCHAR(10)
     ,@ReportType INT 

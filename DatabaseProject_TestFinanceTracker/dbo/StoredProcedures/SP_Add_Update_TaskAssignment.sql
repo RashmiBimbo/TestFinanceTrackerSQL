@@ -1,7 +1,7 @@
 -- =============================================
 -- Author:		<Rashmi Gupta>
 -- Create date: <17-1-2023>
--- Description:	<Add OR Update UserTaskAssignment. It is used in Finance_Tracker\UserTaskAssignment.aspx.cs\BtnAssign_Click >
+-- Description:	<Add OR Update UserTaskAssignment. It is used in Finance_Tracker\UserTaskAssignment.aspx.cs\BtnUnAssign_Click and BtnAssign_Click >
 -- =============================================
 
 ALTER PROCEDURE [dbo].[SP_Add_Update_TaskAssignment] 
@@ -20,6 +20,10 @@ BEGIN
         ,[Created_By]   VARCHAR (20) 
         ,[Approver]     VARCHAR (50) 
         ,[Active]       BIT
+    );
+    
+    DECLARE @InsertedRecIds TABLE (
+        RecId INT
     );
 
     BEGIN TRY
@@ -65,7 +69,17 @@ BEGIN
                 [source].[UserId], [source].[ReportId], [source].[ReportName], GETDATE(), [source].[Created_By], [source].[Approver], [source].[ACTIVE]
             )
             -- OUTPUT $action, inserted.*, inserted.*
+
+            OUTPUT inserted.RecId INTO @InsertedRecIds
             ;
+
+            --Convert the RecIds to a comma-delimited string
+            DECLARE @RecIdList NVARCHAR(MAX);
+            
+            SELECT @RecIdList = STRING_AGG(CAST(RecId AS NVARCHAR), ',') FROM @InsertedRecIds;
+
+            EXEC SP_Add_Update_UsersTasksMonthly 0, 0, @RecIdList;
+            
         COMMIT;
     END TRY
     BEGIN CATCH
@@ -88,89 +102,5 @@ END;
             ]
         '
     */
-    /* 
-        SP_Add_Update_TaskAssignment
-        '
-            [
-              {
-                "USER_ID": "ASHISH",
-                "REPORT_ID": "509",
-                "REPORT_NAME": "plnt ir hy 1",
-                "CREATED_BY": "Ashish",
-                "APPROVER": "ASHISH",
-                "ACTIVE": "0"
-              }
-            ]
-        '
-    */
-    /* 
-        SP_Submit_Tasks
-        '[
-            {
-              "REC_ID": 94,
-              "SUBMIT_DATE": "2024-01-31",
-              "MODIFIED_BY": "Test",
-              "MODIFIED_DATE": "2024-01-31 11:03:24.874"
-            },
-            {
-            "REC_ID": 91,
-            "SUBMIT_DATE": "2024-01-31",
-            "MODIFIED_BY": "Test",
-            "MODIFIED_DATE": "2024-01-31 11:03:42.210"
-            }
-        ]'
-    */
-    /* 
-        SP_Submit_Tasks
-        '[
-            {
-              "REC_ID": 94,
-              "SUBMIT_DATE": "2024-01-31",
-              "MODIFIED_BY": "Test",
-              "MODIFIED_DATE": "2024-01-31 11:03:24.874"
-            },
-            {
-            "REC_ID": 91,
-            "SUBMIT_DATE": "2024-01-31",
-            "MODIFIED_BY": "Test",
-            "MODIFIED_DATE": "2024-01-31 11:03:42.210"
-            }
-        ]'
-    */
-    /* 
-        SP_Submit_Tasks
-        '[
-            {
-              "REC_ID": 94,
-              "SUBMIT_DATE": "2024-01-31",
-              "MODIFIED_BY": "Test",
-              "MODIFIED_DATE": "2024-01-31 11:03:24.874"
-            },
-            {
-            "REC_ID": 91,
-            "SUBMIT_DATE": "2024-01-31",
-            "MODIFIED_BY": "Test",
-            "MODIFIED_DATE": "2024-01-31 11:03:42.210"
-            }
-        ]'
-    */
-    /* 
-        SP_Submit_Tasks
-        '[
-            {
-              "REC_ID": 94,
-              "SUBMIT_DATE": "2024-01-31",
-              "MODIFIED_BY": "Test",
-              "MODIFIED_DATE": "2024-01-31 11:03:24.874"
-            },
-            {
-            "REC_ID": 91,
-            "SUBMIT_DATE": "2024-01-31",
-            "MODIFIED_BY": "Test",
-            "MODIFIED_DATE": "2024-01-31 11:03:42.210"
-            }
-        ]'
-    */
-
 GO
 

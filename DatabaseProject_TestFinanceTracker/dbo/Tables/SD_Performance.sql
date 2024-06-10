@@ -37,7 +37,3 @@ GO
 
 
 
-ALTER TABLE [dbo].[SD_Performance]
-    ADD CONSTRAINT [DEFAULT_SD_Performance_Year_Quarter_No] DEFAULT ((0)) FOR [Year_Quarter_No];
-GO
-

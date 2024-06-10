@@ -14,15 +14,3 @@ CREATE TABLE [dbo].[SD_UsersTasksMonthly] (
 );
 GO
 
-ALTER TABLE [dbo].[SD_UsersTasksMonthly]
-    ADD CONSTRAINT [DEFAULT_SD_UsersTasksMonthly_Month] DEFAULT ((0)) FOR [Month];
-GO
-
-ALTER TABLE [dbo].[SD_UsersTasksMonthly]
-    ADD CONSTRAINT [DEFAULT_SD_UsersTasksMonthly_Created_Date] DEFAULT (getdate()) FOR [Created_Date];
-GO
-
-ALTER TABLE [dbo].[SD_UsersTasksMonthly]
-    ADD CONSTRAINT [DEFAULT_SD_UsersTasksMonthly_Active] DEFAULT ((1)) FOR [Active];
-GO
-
