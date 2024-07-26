@@ -5,7 +5,7 @@ CREATE TABLE [dbo].[SD_UserTaskAssignment] (
     [ReportName]    VARCHAR (150) NULL,
     [Approver]      VARCHAR (50)  NULL,
     [Active]        BIT           CONSTRAINT [DEFAULT_SD_UserTaskAssignment_Active] DEFAULT ((1)) NOT NULL,
-    [Created_Date]  DATETIME      NOT NULL,
+    [Created_Date]  DATETIME      CONSTRAINT [DEFAULT_SD_UserTaskAssignment_Created_Date] DEFAULT (getdate()) NOT NULL,
     [Created_By]    VARCHAR (20)  NOT NULL,
     [Modified_Date] DATETIME      NULL,
     [Modified_By]   VARCHAR (20)  NULL,
@@ -15,4 +15,5 @@ CREATE TABLE [dbo].[SD_UserTaskAssignment] (
 
 
 GO
+
 
