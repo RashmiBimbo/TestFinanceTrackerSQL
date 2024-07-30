@@ -6,3 +6,11 @@ c:\Users\rashmi.gupta\source\repos\Finance_Tracker 21-02-2024\Finance_Tracker_SQ
 c:\Users\rashmi.gupta\source\repos\Finance_Tracker 21-02-2024\Finance_Tracker_SQL\DatabaseProject_TestFinanceTracker\obj\Debug\predeploy.sql
 c:\Users\rashmi.gupta\source\repos\Finance_Tracker 21-02-2024\Finance_Tracker_SQL\DatabaseProject_TestFinanceTracker\obj\Debug\DatabaseProject_TestFinanceTracker.dll
 c:\Users\rashmi.gupta\source\repos\Finance_Tracker 21-02-2024\Finance_Tracker_SQL\DatabaseProject_TestFinanceTracker\obj\Debug\DatabaseProject_TestFinanceTracker.pdb
+c:\Users\rashmi.gupta\source\repos\Finance_Tracker_Repos\Finance Tracker Databases\Finance_Tracker_SQL\bin\Debug\DatabaseProject_TestFinanceTracker.dacpac
+c:\Users\rashmi.gupta\source\repos\Finance_Tracker_Repos\Finance Tracker Databases\Finance_Tracker_SQL\obj\Debug\DatabaseProject_TestFinanceTracker.sqlproj.AssemblyReference.cache
+c:\Users\rashmi.gupta\source\repos\Finance_Tracker_Repos\Finance Tracker Databases\Finance_Tracker_SQL\obj\Debug\Model.xml
+c:\Users\rashmi.gupta\source\repos\Finance_Tracker_Repos\Finance Tracker Databases\Finance_Tracker_SQL\obj\Debug\refactor.xml
+c:\Users\rashmi.gupta\source\repos\Finance_Tracker_Repos\Finance Tracker Databases\Finance_Tracker_SQL\obj\Debug\postdeploy.sql
+c:\Users\rashmi.gupta\source\repos\Finance_Tracker_Repos\Finance Tracker Databases\Finance_Tracker_SQL\obj\Debug\predeploy.sql
+c:\Users\rashmi.gupta\source\repos\Finance_Tracker_Repos\Finance Tracker Databases\Finance_Tracker_SQL\obj\Debug\DatabaseProject_TestFinanceTracker.dll
+c:\Users\rashmi.gupta\source\repos\Finance_Tracker_Repos\Finance Tracker Databases\Finance_Tracker_SQL\obj\Debug\DatabaseProject_TestFinanceTracker.pdb

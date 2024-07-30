@@ -15,7 +15,7 @@ CREATE PROCEDURE [dbo].[SP_Get_Unassigned_Tasks]
 AS
 BEGIN
     /*
-        SP_Get_Unassigned_Tasks 'CORPORATE1', '', 0, 0, 0, 'corp'
+        SP_Get_Unassigned_Tasks '', 'NORTH1 COMMERCIAL', 0, 0, 0, null, 0, 'SUPERADMIN'
         SP_Get_Unassigned_Tasks 'ashish', '', 0, 0, 0, 'CORP', 0, ''
         SP_Get_Unassigned_Tasks 'ashish', '', 0, 0, 0, NULL, 0
         SP_Get_Unassigned_Tasks 'ABHA', 'ANKIT', 00, 17, 16
@@ -34,14 +34,14 @@ BEGIN
 
         
         IF EXISTS (SELECT * FROM SD_Login_Master WHERE (ISNULL(@Assigner,'')) != '' AND UPPER(TRIM(User_Id)) = @Assigner AND Active = 1 AND Role_Id = 4)
-        BEGIN
+            BEGIN
             SET @IsSuperAdmin = 1;
             --SELECT 'SuperAdmin';
-        END
-        ELSE
-        -- Decide whether the given user is admin or approver or both
-        IF EXISTS(SELECT * FROM SD_Login_Master WHERE UPPER(TRIM(Location_Id)) = @LocationId AND Active = 1 AND (ISNULL(@Approver_Id,'') = '' OR UPPER(TRIM(User_Id)) = @Approver_Id AND Role_Id = 1 ))
-        BEGIN    
+            END
+            ELSE
+            -- Decide whether the given user is admin or approver or both
+            IF EXISTS(SELECT * FROM SD_Login_Master WHERE UPPER(TRIM(Location_Id)) = @LocationId AND Active = 1 AND (ISNULL(@Approver_Id,'') = '' OR    UPPER(TRIM(User_Id)) = @Approver_Id AND Role_Id = 1 ))
+            BEGIN    
             IF EXISTS( SELECT * FROM SD_UserTaskAssignment WHERE UPPER(TRIM(Approver)) = @Approver_Id AND Active = 1)
             BEGIN
                SET @IsApprAdmin = 1;
@@ -52,8 +52,8 @@ BEGIN
                SET @IsAdmin = 1;
             --    SELECT 'Admin';
             END
-        END
-        ELSE 
+            END
+            ELSE 
             IF EXISTS( SELECT * FROM SD_UserTaskAssignment WHERE UPPER(TRIM(Approver)) = @Approver_Id AND Active = 1)
             BEGIN
                SET @IsApprover = 1;
@@ -65,10 +65,10 @@ BEGIN
                     RETURN;
                 END        
 
-        IF OBJECT_ID('TEMPDB..#TBL') IS NOT NULL
-        BEGIN
-            DROP TABLE #TBL;
-        END 
+            IF OBJECT_ID('TEMPDB..#TBL') IS NOT NULL
+            BEGIN
+                DROP TABLE #TBL;
+            END 
 
         --SELECT THE USER+REPORT COMBO WHICH IS ACTIVE AND HAS APPROVER. LATER WE WILL EXCLUDE THESE RECORDS FROM SUPERSET OF USER+REPORT COMBO. THUS WE GET THE USER+REPORT COMBO WHICH DOES NOT HAVE ANY APPROVER OR INACTIVE OR DOES NOT EXIST IN USERTASKASSIGNMENT.
         SELECT * INTO #TBL FROM
@@ -90,18 +90,18 @@ BEGIN
             -- If both are given, subordinates whose approver is @approverId are selected from usertaskassignment + subordinates whose location is @LocationId are selected from login_master   
             SELECT
             ROW_NUMBER() OVER (PARTITION BY UserID ORDER BY [User_Name]) [Repeat], TBL.*
-            -- , LM.User_Id ApproverId
             FROM 
             (
                 SELECT DISTINCT 
-                LM.User_Id UserId                
-                ,UTA.Approver Approver
-                ,LM.[User_Name] User_Name
-                ,uta.ReportName
-                ,LocM.Loc_Id
-                ,UTA.ReportId
-                ,UTA.RecId U_Id
-                ,LM.Role_Id
+                    LM.User_Id UserId                
+                    ,LM.Email Email                
+                    ,UTA.Approver Approver
+                    ,LM.[User_Name] User_Name
+                    ,uta.ReportName
+                    ,LocM.Loc_Id
+                    ,UTA.ReportId
+                    ,UTA.RecId U_Id
+                    ,LM.Role_Id
                 FROM
                     SD_Login_Master LM
                     LEFT JOIN
@@ -111,28 +111,26 @@ BEGIN
                 WHERE
                     LM.Active = 1
                     AND
-                   (LocM.Active IS NOT NULL OR LocM.Active = 1)
+                   (LocM.Active IS NULL OR LocM.Active = 1)
                     AND
-                   (UTA.Active IS NOT NULL OR UTA.Active = 1)
+                   (UTA.Active IS NULL OR UTA.Active = 1)
                     AND
                     UPPER(TRIM(LM.User_Id)) = IIF(ISNULL(@User_Id,'')='', UPPER(TRIM(LM.User_Id)), @User_Id)
                     AND
                     (
                         (@IsSuperAdmin = 1)
                         OR
-                        (@IsApprAdmin = 1 AND ((UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId) OR UPPER(TRIM(UTA.Approver)) = @Approver_Id))
+                        (@IsApprAdmin = 1 AND ((UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId) OR (UPPER(TRIM(UTA.Approver)) = @Approver_Id)))
                         OR 
                         (@IsAdmin = 1 AND (UTA.APPROVER IS NULL AND UPPER(TRIM(LocM.Loc_Id)) = @LocationId))
                         OR
-                        (@IsApprover = 1 AND UPPER(TRIM(UTA.Approver)) = @Approver_Id)
+                        (@IsApprover = 1 AND (UTA.APPROVER IS NOT NULL AND UPPER(TRIM(UTA.Approver)) = @Approver_Id))
                     )
                     AND
                     LM.Role_Id = IIF(@RoleId = 0, LM.Role_Id, @RoleId)
             ) TBL
-            -- CROSS JOIN SD_Login_Master LM 
-            -- WHERE LM.Active = 1 AND UPPER(TRIM(USER_ID))= DBO.CHECKSTR(@Approver_Id, User_Id)
         ) 
-        --get only unique subordinate
+        /*get only unique subordinate*/
         -- SELECT * FROM Users U 
         -- WHERE U.Repeat = 1
         ,UsrRpt
@@ -143,9 +141,13 @@ BEGIN
                 ROW_NUMBER() OVER (PARTITION BY U.UserID, RM.Report_Name ORDER BY U.[User_Name]) [Repeat1],
                 RM.Report_Name,
                 U.UserId,
+                U.Email,
                 U.Approver,
                 U.[User_Name],
                 U.[Loc_Id],
+                RM.Due_Date,
+                RM.Weight,
+                RM.[Type] Report_Type,
                 RM.Active RM_Active,
                 RM.Rec_ID REPORT_ID,
                 CM.Rec_Id Category_Id,
@@ -183,7 +185,11 @@ BEGIN
                 UTA.RecId UTRecId,
                 U.User_Name User_Name ,
                 U.UserId UserId,
+                U.Email,
                 U.Report_Name Task_Name,
+                u.Due_Date,
+                U.Report_Type,
+                U.Weight,
                 UTA.ReportName UTReport_Name,
                 U.Approver Approver,
                 UTA.Approver UTA_Approver,

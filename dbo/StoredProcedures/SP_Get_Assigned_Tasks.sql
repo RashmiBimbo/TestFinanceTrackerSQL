@@ -56,6 +56,10 @@ BEGIN
                     ,UTA.RecId
                     -- ,LocM.Loc_Id
                     ,LM.Role_Id
+                    ,RM.[Type] Report_Type
+                    ,LM.Email
+                    ,RM.Due_Date
+                    ,RM.Weight
                     FROM 
                         [dbo].[SD_UserTaskAssignment] UTA
                     INNER JOIN 

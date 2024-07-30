@@ -7,13 +7,13 @@
 CREATE PROCEDURE [dbo].[SP_Get_Submit_Tasks_SubOrdinates]
 	@From_Date DATE = NULL
    ,@To_Date DATE = NULL
-   ,@Approver_Id varchar(20) = NULL
-   ,@TypeId INT = 0
+   ,@User_Id varchar(50) = NULL
    ,@IsApproved bit = 0
-   ,@User_Id varchar(20) = NULL
-   ,@Report_Id int = 0
-   ,@Role_Id int = 0
+   ,@ReportTypeId INT = 0
+   ,@Approver_Id varchar(50) = NULL
    ,@Location_Id varchar(20) = NULL
+   ,@Role_Id int = 0
+   ,@Report_Id int = 0
 AS
 BEGIN
 
@@ -30,16 +30,16 @@ BEGIN
 	SET @Location_Id = UPPER(TRIM(@Location_Id)); 
 
     SELECT 
-        ROW_NUMBER() OVER (ORDER BY Due_Date, Submit_Date DESC) [Sno], *
+        ROW_NUMBER() OVER (ORDER BY Due_Date, [User_Name], Report_Name, Submit_Date DESC) [Sno], *
     FROM
     (
         SELECT ROW_NUMBER() OVER (PARTITION BY LM.[User_Id], RM.Report_Name ORDER BY LM.[User_Id], RM.Report_Name) RN, 
-         LM.[User_Name], U.DueDate Due_Date,  CTM.Category_Type_Name, CM.Category_Name, RM.Report_Name, P.[Location], P.Rec_ID Task_Id, RM.Due_Date [Due_Date_Orgnl], U.[UserId]
+         LM.[User_Name], U.DueDate Due_Date,  CTM.Category_Type_Name, CM.Category_Name, RM.Report_Name, P.[Location], P.Rec_ID Task_Id, RM.Due_Date [Due_Date_Orgnl], U.[UserId] User_Id
         ,P.Month_From_Date, P.Month_To_Date, U.ReportId , RM.[Type] Type_Orgnl, P.Approve_Date Appr_Date_Orgnl, LM.Role_Id, LM.Location_Id
-        ,RM.[Type] [Type]
+        ,RM.[Type] [Report_Type], RM.Priority, RM.Weight
         , FORMAT(P.Submit_Date, 'dd-MMM-yyyy') Submit_Date
         , FORMAT(P.Approve_Date, 'dd-MMM-yyyy') Approve_Date
-        , LM.Email
+        , LM.Email, UTA.Approver
 	    FROM SD_UsersTasksMonthly U 
         INNER JOIN SD_UserTaskAssignment UTA  ON UPPER(TRIM(U.UserId)) = UPPER(TRIM(UTA.[UserId])) AND UTA.ReportId = U.ReportId
         INNER JOIN SD_Performance P ON UPPER(TRIM(U.UserId)) = UPPER(TRIM(P.[User_Id])) AND P.Report_Id = U.ReportId
@@ -65,7 +65,7 @@ BEGIN
             AND 
             U.MONTH = MONTH(@From_Date)-1 
             AND
-            RTM.RecId = IIF(@TypeId < 1, RTM.RECID, @TypeId)
+            RTM.RecId = IIF(@ReportTypeId < 1, RTM.RECID, @ReportTypeId)
         	AND
         	UPPER(TRIM(U.UserId)) = IIF(ISNULL(@User_Id,'') = '', UPPER(TRIM(U.UserId)), @User_Id)
             AND 
@@ -90,7 +90,6 @@ BEGIN
             UTA.Active = 1
         ) TBL
         WHERE RN = 1
-        ORDER BY Due_Date, [User_Name], Report_Name, Submit_Date DESC
 
     -- DECLARE @CrntMnth INT = DATEPART(MONTH, GETDATE());
     -- DECLARE @DueMnth  INT = MONTH(DATEADD(MONTH, 2, GETDATE()));
