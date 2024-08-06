@@ -72,21 +72,57 @@ BEGIN
 
             OUTPUT inserted.RecId INTO @InsertedRecIds
             ;
-        COMMIT;
 
             --Convert the RecIds to a comma-delimited string
             DECLARE @RecIdList NVARCHAR(MAX);
-            
             SELECT @RecIdList = STRING_AGG(CAST(RecId AS NVARCHAR), ',') FROM @InsertedRecIds;
 
+            DECLARE @2ndLastMonth INT = MONTH(DATEADD(MONTH, -2, GETDATE()));
+            DECLARE @CrntMnthYr INT = YEAR(GETDATE());
+            DECLARE @LastMonth INT = MONTH(DATEADD(MONTH, -1, GETDATE()));
+            DECLARE @NxtDueMnthYr INT = YEAR(DATEADD(MONTH, 1, GETDATE()));
+
             EXEC SP_Add_Update_UsersTasksMonthly 0, 0, @RecIdList;
+            EXEC SP_Add_Update_UsersTasksMonthly @LastMonth, @NxtDueMnthYr, @RecIdList;
+            EXEC SP_Add_Update_UsersTasksMonthly @2ndLastMonth, @CrntMnthYr, @RecIdList;
             
+        COMMIT;
     END TRY
     BEGIN CATCH
         ROLLBACK;
         SELECT ERROR_MESSAGE();
     END CATCH
 END;
+    /* 
+        SP_Add_Update_TaskAssignment
+        '
+            [
+              {
+                "USER_ID": "ASHISH",
+                "REPORT_ID": "509",
+                "REPORT_NAME": "plnt ir hy 1",
+                "CREATED_BY": "Ashish",
+                "APPROVER": "ASHISH",
+                "ACTIVE": "0"
+              }
+            ]
+        '
+    */
+    /* 
+        SP_Add_Update_TaskAssignment
+        '
+            [
+              {
+                "USER_ID": "ASHISH",
+                "REPORT_ID": "509",
+                "REPORT_NAME": "plnt ir hy 1",
+                "CREATED_BY": "Ashish",
+                "APPROVER": "ASHISH",
+                "ACTIVE": "0"
+              }
+            ]
+        '
+    */
     /* 
         SP_Add_Update_TaskAssignment
         '

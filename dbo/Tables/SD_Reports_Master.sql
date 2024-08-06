@@ -31,6 +31,8 @@ GO
 
 
 
+
+
 ALTER TABLE [dbo].[SD_Reports_Master]
     ADD CONSTRAINT [FK_SD_Reports_Master_SD_ReportType_Master] FOREIGN KEY ([TypeId]) REFERENCES [dbo].[SD_ReportType_Master] ([RecId]);
 GO
