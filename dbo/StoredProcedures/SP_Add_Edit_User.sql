@@ -1,9 +1,9 @@
 -- =============================================
 -- Author:		<RASHMI GUPTA>
 -- Create date: <04-01-2023>
--- Description:	<Register User in SD_Login_Master>
+-- Description:	<Add/Edit User in SD_Login_Master>
 -- =============================================
-CREATE PROCEDURE [dbo].[SP_Register_User]
+CREATE PROCEDURE [dbo].[SP_Add_Edit_User]
     @User_Name VARCHAR(250),
     @Role_Id INT,
     @EMail NVARCHAR(320),
@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[SP_Register_User]
     @Location_Id VARCHAR(20) = NULL,
     @Address VARCHAR(MAX) = NULL,
     @Created_By VARCHAR(250) = 'ADMIN',
-    @Rec_Id int = 0,
+    @Rec_Id BIGINT = 0,
     @User_Id VARCHAR(20),
     @Password VARCHAR(MAX),
     @IP_Address VARCHAR(30) = NULL,
@@ -20,7 +20,7 @@ CREATE PROCEDURE [dbo].[SP_Register_User]
     @Active BIT = 1,
     @Flag BIT = 1,
     @Change_Password_Date DATE = NULL,
-    @Created_Date DATETIME = getdate
+    @Created_Date DATETIME = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -43,9 +43,9 @@ BEGIN
         -- Start the transaction
         BEGIN TRANSACTION;
     
-        IF NOT EXISTS
+        IF @Rec_Id = 0 AND NOT EXISTS
         (
-            SELECT * FROM [dbo].[SD_Login_Master] WHERE UPPER([User_Id]) = UPPER(@User_Id)
+            SELECT * FROM [dbo].[SD_Login_Master] WHERE DBO.[CapsStr]([User_Id]) =  DBO.[CapsStr](@User_Id)
         )
         BEGIN
             INSERT INTO [dbo].[SD_Login_Master]
@@ -53,9 +53,12 @@ BEGIN
                 [User_Id], [Password], [User_Name], [Company_Id], [Sub_Company_Id], [Role_Id], [EMail], [Login_Type], [Active], [Flag], [Change_Password_Date], [Address], [IP_Address], [Location_Id], [Created_Date], [Created_By]
             )
             VALUES
-            (@User_Id, @Password, @User_Name, IIF(ISNULL(@Company_Id,'') = '', 'BBI', @Company_Id), @Sub_Company_Id, @Role_Id, @EMail, @Login_Type, @Active, @Flag, @Change_Password_Date, @Address, @IP_Address, UPPER(@Location_Id), @Created_Date, UPPER(@Created_By))
+            (@User_Id, @Password, @User_Name, IIF(ISNULL(@Company_Id,'') = '', 'BBI', @Company_Id), @Sub_Company_Id, @Role_Id, @EMail, @Login_Type, @Active, @Flag, @Change_Password_Date, @Address, @IP_Address, UPPER(@Location_Id), IIF(@Created_Date is null, GETDATE(), @Created_Date), UPPER(@Created_By))
         END
-        ELSE IF @Rec_Id != 0
+        ELSE IF EXISTS
+        (
+            SELECT * FROM [dbo].[SD_Login_Master] WHERE UPPER([User_Id]) = UPPER(@User_Id) AND Rec_Id = @Rec_Id
+        )
         BEGIN
             UPDATE [dbo].[SD_Login_Master]
             SET
@@ -65,7 +68,7 @@ BEGIN
                 [Login_Type] = @Login_Type,
                 [Location_Id] = @Location_Id,
                 [Address] = @Address,
-                [Modified_Date] = GETDATE(),
+                [Modified_Date] = IIF(@Created_Date IS NULL, GETDATE(), @Created_Date),
                 [Modified_By] = @Created_By
             WHERE Rec_Id = @Rec_Id
         END
@@ -81,6 +84,5 @@ BEGIN
         SELECT ERROR_MESSAGE();
     END CATCH;
 END;
-
 GO
 
