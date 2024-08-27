@@ -3,13 +3,16 @@
 -- Create date: <14-05-2024>
 -- Description:	<SQL equivalent of string.IsNullOrEmptyOrWhiteSpace>
 -- =============================================
-CREATE FUNCTION IsEmpty 
+CREATE FUNCTION [dbo].[IsEmpty] 
 (
 	@Obj VARCHAR(MAX)
 )
 RETURNS BIT
 AS
 BEGIN
+    /*    
+        SELECT DBO.IsEmpty('HI');
+    */
 	-- Declare the return variable here
 	DECLARE @Ans BIT;
 

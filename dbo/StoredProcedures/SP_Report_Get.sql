@@ -8,14 +8,20 @@ CREATE PROCEDURE [dbo].[SP_Report_Get]
  ,@Category_Type_Id int = 0
  ,@Type INT = 0
  ,@Report_Id int = 0
+ ,@User_Type VARCHAR(20) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
     /*
-        SP_Get_Reports  17
+        SP_Report_Get  0, 0, 0, 0, 'pLANT'
     */
+    IF(@Category_Type_Id = 0)
+    -- SELECT @Category_Type_Id = Rec_Id FROM SD_Category_Type_Master WHERE @User_Type is not NULL AND DBO.CapsStr(Category_Type_Name) = DBO.CapsStr(@User_Type)
+         SET @Category_Type_Id = [dbo].[GetCatTypeByUserType](@User_Type);
+    -- SELECT @Category_Type_Id;
+    
     SELECT ROW_NUMBER() OVER(ORDER BY Report_Name) Sno, * FROM
     (
         Select DISTINCT TRIM(RM.Report_Name) Report_Name, TRIM(RTM.[TypeName]) [Type_orgnl], RM.Rec_Id Report_Id , RTM.RecId TypeId

@@ -4,12 +4,19 @@
 -- Description:	<Get the Category Type from SD_Category_Type_Master>
 -- =============================================
 CREATE PROCEDURE [dbo].[SP_Get_Categories]
-@Type_Id int = 0
+    @Type_Id int = 0
+   ,@User_Type VARCHAR(20) = NULL
 AS
 BEGIN
+    /*
+    SP_Get_Categories 0, 'Corporate'
+    */
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+
+    IF(@Type_Id = 0)
+        SET @Type_Id = [dbo].[GetCatTypeByUserType](@User_Type);
 
     SELECT CM.Rec_Id Category_Id,
            TRIM(CM.Category_Name) Category_Name,

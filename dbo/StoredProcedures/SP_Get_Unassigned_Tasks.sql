@@ -12,11 +12,12 @@ CREATE PROCEDURE [dbo].[SP_Get_Unassigned_Tasks]
    , @LocationId VARCHAR(20) = NULL
    , @RoleId INT = 0
    , @Assigner VARCHAR(50) = NULL
+   , @User_Type VARCHAR(20) = NULL
 AS
 BEGIN
     /*
         SP_Get_Unassigned_Tasks '', 'NORTH1 COMMERCIAL', 0, 0, 0, null, 0, 'SUPERADMIN'
-        SP_Get_Unassigned_Tasks 'ashish', '', 0, 0, 0, 'CORP', 0, ''
+        SP_Get_Unassigned_Tasks 'ashish', '', 0, 13, 0, 'CORP', 0, ''
         SP_Get_Unassigned_Tasks 'ashish', '', 0, 0, 0, NULL, 0
         SP_Get_Unassigned_Tasks 'ABHA', 'ANKIT', 00, 17, 16
         SP_Get_Unassigned_Tasks '', null, 0, 0, 0, 'KOC'
@@ -30,6 +31,9 @@ BEGIN
         SET @LocationId  = UPPER(TRIM(@LocationId));
         SET @Assigner    = UPPER(TRIM(@Assigner));
 
+        IF @Category_Type_Id = 0
+            SET @Category_Type_Id = [DBO].[GetCatTypeByUserType](@User_Type);
+            
         DECLARE @IsApprAdmin BIT, @IsAdmin BIT, @IsApprover BIT, @IsSuperAdmin BIT; 
 
         

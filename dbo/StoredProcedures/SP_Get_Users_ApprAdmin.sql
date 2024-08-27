@@ -7,6 +7,7 @@ CREATE PROCEDURE [dbo].[SP_Get_Users_ApprAdmin]
     @Approver_Id  VARCHAR(MAX) = NULL
    ,@Location_Id VARCHAR(20) = NULL
    ,@User_Id VARCHAR(MAX) = NULL
+   ,@User_Type VARCHAR(20) = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -30,19 +31,19 @@ BEGIN
         LEFT JOIN
         SD_Location_Master LocM ON UPPER(TRIM(LM.Location_Id)) = UPPER(TRIM(LocM.Loc_Id))
         LEFT JOIN
-        SD_UserTaskAssignment UTA ON UPPER(TRIM(LM.User_Id)) = UPPER(TRIM(UTA.UserId)) AND UTA.Active = 1
+        SD_UserTaskAssignment UTA ON UPPER(TRIM(LM.User_Id)) = UPPER(TRIM(UTA.UserId))
     WHERE
-        LM.Active = 1
-        AND
-        LocM.Active = 1
-        AND
-        UTA.Active = 1
-        AND
         UPPER(TRIM(LM.User_Id)) = IIF(ISNULL(@User_Id,'')='', UPPER(TRIM(LM.User_Id)), @User_Id)
         AND
         ( UPPER(TRIM(UTA.Approver)) = IIF(ISNULL(@Approver_Id,'')='', UPPER(TRIM(UTA.Approver)), @Approver_Id)
         OR
         UPPER(TRIM(LocM.Loc_Id)) = IIF(ISNULL(@Location_Id,'')='', UPPER(TRIM(LocM.Loc_Id)), @Location_Id))
+        AND
+        LM.Active = 1
+        AND
+        LocM.Active = 1
+        AND
+        UTA.Active = 1
     ORDER BY User_Name
 
 END

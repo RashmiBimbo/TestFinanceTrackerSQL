@@ -4,23 +4,22 @@
 -- Description:	<Register User in SD_Login_Master>
 -- =============================================
 CREATE PROCEDURE [dbo].[SP_Register_User]
+    @User_Id VARCHAR(20),
+    @Password VARCHAR(MAX),
     @User_Name VARCHAR(250),
+    @Company_Id VARCHAR(10) = NULL,
+    @Sub_Company_Id VARCHAR(10) = NULL,
     @Role_Id INT,
     @EMail NVARCHAR(320),
     @Login_Type CHAR(1) = NULL,
-    @Location_Id VARCHAR(20) = NULL,
-    @Address VARCHAR(MAX) = NULL,
-    @Created_By VARCHAR(250) = 'ADMIN',
-    @Rec_Id int = 0,
-    @User_Id VARCHAR(20),
-    @Password VARCHAR(MAX),
-    @IP_Address VARCHAR(30) = NULL,
-    @Company_Id VARCHAR(10) = NULL,
-    @Sub_Company_Id VARCHAR(10) = NULL,
     @Active BIT = 1,
     @Flag BIT = 1,
     @Change_Password_Date DATE = NULL,
-    @Created_Date DATETIME = getdate
+    @Address VARCHAR(MAX) = NULL,
+    @IP_Address VARCHAR(30) = NULL,
+    @Location_Id VARCHAR(20) = NULL,
+    @Created_Date DATETIME = getdate,
+    @Created_By VARCHAR(250) = 'ADMIN'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -39,38 +38,22 @@ BEGIN
     SET @Location_Id = TRIM(@Location_Id);
     SET @Created_By = TRIM(@Created_By);
 
+    IF NOT EXISTS
+    (
+        SELECT *
+        FROM [dbo].[SD_Login_Master]
+        WHERE UPPER([User_Id]) = UPPER(@User_Id)
+    )
     BEGIN TRY
         -- Start the transaction
         BEGIN TRANSACTION;
-    
-        IF NOT EXISTS
+
+        INSERT INTO [dbo].[SD_Login_Master]
         (
-            SELECT * FROM [dbo].[SD_Login_Master] WHERE UPPER([User_Id]) = UPPER(@User_Id)
+            [User_Id], [Password], [User_Name], [Company_Id], [Sub_Company_Id], [Role_Id], [EMail], [Login_Type], [Active], [Flag], [Change_Password_Date], [Address], [IP_Address], [Location_Id], [Created_Date], [Created_By]
         )
-        BEGIN
-            INSERT INTO [dbo].[SD_Login_Master]
-            (
-                [User_Id], [Password], [User_Name], [Company_Id], [Sub_Company_Id], [Role_Id], [EMail], [Login_Type], [Active], [Flag], [Change_Password_Date], [Address], [IP_Address], [Location_Id], [Created_Date], [Created_By]
-            )
-            VALUES
-            (@User_Id, @Password, @User_Name, IIF(ISNULL(@Company_Id,'') = '', 'BBI', @Company_Id), @Sub_Company_Id, @Role_Id, @EMail, @Login_Type, @Active, @Flag, @Change_Password_Date, @Address, @IP_Address, UPPER(@Location_Id), @Created_Date, UPPER(@Created_By))
-        END
-        ELSE IF @Rec_Id != 0
-        BEGIN
-            UPDATE [dbo].[SD_Login_Master]
-            SET
-                [User_Name] = @User_Name,
-                [Role_Id] = @Role_Id,
-                [EMail] = @EMail,
-                [Login_Type] = @Login_Type,
-                [Location_Id] = @Location_Id,
-                [Address] = @Address,
-                [Modified_Date] = GETDATE(),
-                [Modified_By] = @Created_By
-            WHERE Rec_Id = @Rec_Id
-        END
-        ELSE
-        SELECT 'User already exists!'
+        VALUES
+        (@User_Id, @Password, @User_Name, IIF(ISNULL(@Company_Id,'') = '', 'BBI', @Company_Id), @Sub_Company_Id, @Role_Id, @EMail, @Login_Type, @Active, @Flag, @Change_Password_Date, @Address, @IP_Address, UPPER(@Location_Id), @Created_Date, UPPER(@Created_By))
 
         -- Commit the transaction if everything is successful
         COMMIT;
@@ -80,6 +63,8 @@ BEGIN
         ROLLBACK;
         SELECT ERROR_MESSAGE();
     END CATCH;
+    ELSE
+        SELECT 'User already exists!'
 END;
 
 GO

@@ -12,6 +12,7 @@ CREATE PROCEDURE [dbo].[SP_Get_Assigned_Tasks]
    ,@LocationId VARCHAR(20) = NULL
    ,@RoleId INT = 0
    ,@Assigner VARCHAR(50) = NULL
+   ,@User_Type VARCHAR(20) = NULL
 AS
 BEGIN
     /*
@@ -24,12 +25,15 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+    DECLARE @IsAdmin BIT = 0, @IsSuperAdmin BIT = 0; 
+
     SET @Approver_Id = ISNULL(UPPER(TRIM(@Approver_Id)), '');
     SET @User_Id     = UPPER(TRIM(@User_Id));
     SET @LocationId  = UPPER(TRIM(@LocationId));
     SET @Assigner    = UPPER(TRIM(@Assigner));
 
-    DECLARE @IsAdmin BIT = 0, @IsSuperAdmin BIT = 0; 
+    IF @Category_Type_Id = 0
+        SET @Category_Type_Id = [DBO].[GetCatTypeByUserType](@User_Type);
     
     IF EXISTS (SELECT * FROM SD_Login_Master WHERE (ISNULL(@Assigner,'')) != '' AND UPPER(TRIM(User_Id)) = @Assigner AND Active = 1 AND Role_Id = 4)
     BEGIN
